@@ -2,11 +2,6 @@ from typing import Any, Dict
 
 def remove_null_and_empty(obj: Any) -> Any:
     """Recursively remove null, empty dicts/lists, and empty strings from a dict/list.
-
-    Additionally:
-    - Remove meta.included when it's False
-    - Remove meta.settings when present
-    - Remove empty meta dicts and empty parent objects after cleanup
     """
     if isinstance(obj, dict):
         result = {}
