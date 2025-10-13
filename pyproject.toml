@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "productive-mcp"
+version = "0.1.0"
+description = "Simple MCP server to access the Productive API (projects, tasks, comments, todo-lists)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Productive MCP", email = "productive@example.com"}
+]
+keywords = ["productive", "mcp", "tasks", "comments", "todos"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "fastmcp>=2.12.3",
+    "httpx>=0.28.1",
+    "pyyaml>=6.0"
+]
+
+[project.urls]
+Homepage = "https://example.com/"
+
+[project.scripts]
+productive = "server:main"
+productive-client = "productive_client:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
