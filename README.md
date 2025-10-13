@@ -102,6 +102,7 @@ Retrieve a specific todo by ID. Returns detailed todo information including attr
 ## Output Format
 
 All tools return data in YAML format for improved readability and LLM processing.
+The output is filtered to remove empty, null or redundant information.
 
 - `data`: Contains the main resource data (array for collections, object for single items)
 - `meta`: Contains pagination and metadata information
@@ -123,19 +124,13 @@ data:
     organization:
       data:
         type: organizations
-        id: '1003'
-    company:
-      meta:
-        included: false
+        id: '3003'
 meta:
   current_page: 1
   total_pages: 1
   total_count: 3
   page_size: 30
   max_page_size: 200
-links:
-  first: 'http://api.productive.io/api/v2/projects?page%5Bnumber%5D=1&page%5Bsize%5D=30'
-  last: 'http://api.productive.io/api/v2/projects?page%5Bnumber%5D=1&page%5Bsize%5D=30'
 ```
 
 ## Error Handling
