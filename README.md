@@ -158,4 +158,4 @@ All errors are logged via MCP context with appropriate severity levels.
 
 ## License
 
-This project is provided as-is for educational and integration purposes.
+MIT License.
