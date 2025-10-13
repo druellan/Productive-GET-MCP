@@ -2,6 +2,7 @@ from fastmcp import Context
 from typing import Dict, Any
 
 from productive_client import client, ProductiveAPIError
+from utils import filter_response
 from yaml_utils import convert_json_to_yaml
 
 
@@ -17,10 +18,12 @@ async def get_projects(ctx: Context) -> str:
     try:
         await ctx.info("Fetching all projects")
         result = await client.get_projects()
+        
         await ctx.info("Successfully retrieved projects")
+        filtered = filter_response(result)
         
-        return convert_json_to_yaml(result)
-        
+        return convert_json_to_yaml(filtered)
+    
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
         
@@ -30,9 +33,9 @@ async def get_projects(ctx: Context) -> str:
             await ctx.error("Invalid API token - check configuration")
             
         raise e
-        
     except Exception as e:
         await ctx.error(f"Unexpected error fetching projects: {str(e)}")
+        
         raise e
 
 
