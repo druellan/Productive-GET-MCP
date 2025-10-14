@@ -105,7 +105,6 @@ The output is filtered to remove empty, null or redundant information.
 
 - `data`: Contains the main resource data (array for collections, object for single items)
 - `meta`: Contains pagination and metadata information
-- `links`: Contains pagination links (for collection endpoints)
 - `included`: Contains related resource data (when relationships are included)
 
 Example JSON output for projects:
