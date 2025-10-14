@@ -29,7 +29,7 @@ async def get_projects(ctx: Context) -> str:
         await ctx.info("Successfully retrieved projects")
         filtered = filter_response(result)
         
-        return json.dumps(filtered, indent=2, ensure_ascii=False)
+        return json.dumps(filtered)
     
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -69,7 +69,7 @@ async def get_tasks(ctx: Context) -> str:
         await ctx.info("Successfully retrieved tasks")
         
         filtered = filter_response(result)
-        return json.dumps(filtered, indent=2, ensure_ascii=False)
+        return json.dumps(filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -111,7 +111,7 @@ async def get_task(task_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved task")
         
         filtered = filter_response(result)
-        return json.dumps(filtered, indent=2, ensure_ascii=False)
+        return json.dumps(filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -150,7 +150,7 @@ async def get_comments(ctx: Context) -> str:
         await ctx.info("Successfully retrieved comments")
         
         filtered = filter_response(result)
-        return json.dumps(filtered, indent=2, ensure_ascii=False)
+        return json.dumps(filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -191,7 +191,7 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved comment")
         
         filtered = filter_response(result)
-        return json.dumps(filtered, indent=2, ensure_ascii=False)
+        return json.dumps(filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -230,7 +230,7 @@ async def get_todos(ctx: Context) -> str:
         await ctx.info("Successfully retrieved todos")
         
         filtered = filter_response(result)
-        return json.dumps(filtered, indent=2, ensure_ascii=False)
+        return json.dumps(filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -271,7 +271,7 @@ async def get_todo(todo_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved todo")
         
         filtered = filter_response(result)
-        return json.dumps(filtered, indent=2, ensure_ascii=False)
+        return json.dumps(filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
