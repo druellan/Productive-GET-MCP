@@ -53,9 +53,14 @@ class ProductiveClient:
         """Get all projects"""
         return await self._request("GET", "/projects")
 
-    async def get_tasks(self) -> Dict[str, Any]:
-        """Get all tasks"""
-        return await self._request("GET", "/tasks")
+    async def get_tasks(self, params: Optional[dict] = None) -> Dict[str, Any]:
+        """Get all tasks
+
+        Params:
+            params: Optional dict of query parameters to pass to the Productive API
+                    (e.g. pagination or filter params like {'page[number]': 2, 'page[size]': 30, 'filter[project_id][eq]': '343136'})
+        """
+        return await self._request("GET", "/tasks", params=params)
 
     async def get_task(self, task_id: str) -> Dict[str, Any]:
         """Get task by ID"""

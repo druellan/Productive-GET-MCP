@@ -1,5 +1,6 @@
 from fastmcp import FastMCP, Context
-from typing import Any, Dict
+from typing import Any, Dict, Annotated
+from pydantic import Field
 from config import config
 from productive_client import client
 import tools
@@ -39,18 +40,30 @@ async def get_projects(ctx: Context) -> Dict[str, Any]:
     return await tools.get_projects(ctx)
 
 @mcp.tool
-async def get_tasks(ctx: Context) -> Dict[str, Any]:
-    """Get all active tasks across all projects with full assignment details.
+async def get_tasks(
+    ctx: Context,
+    project_id: Annotated[str, Field(description="Productive project ID to filter tasks by")] = None,
+    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
+    page_size: Annotated[int, Field(description="Number of tasks per page (max 200)")] = None,
+    extra_filters: Annotated[dict, Field(description="Additional Productive query filters (e.g. {'filter[status][eq]': 'open'})")] = None
+) -> Dict[str, Any]:
+    """Get tasks with optional filtering and pagination.
 
-    Returns comprehensive task data including:
-    - Task priorities (low, normal, high, urgent) and statuses
-    - Assigned team members with hourly rates and roles
-    - Estimated hours vs actual hours tracked
-    - Parent project details and client information
-    - Due dates, start dates, and completion tracking
-    - Related comments, attachments, and todo-lists
+    Supports Productive's native query-language:
+      - Pagination: page_number, page_size
+      - Filtering: project_id, or any extra_filters dict
+      - All params are optional; omit to fetch all tasks.
+
+    Returns:
+        Dictionary of tasks matching the provided filters (passed through to the Productive API)
     """
-    return await tools.get_tasks(ctx)
+    return await tools.get_tasks(
+        ctx,
+        project_id=project_id,
+        page_number=page_number,
+        page_size=page_size,
+        extra_filters=extra_filters
+    )
 
 @mcp.tool
 async def get_task(task_id: str, ctx: Context) -> Dict[str, Any]:

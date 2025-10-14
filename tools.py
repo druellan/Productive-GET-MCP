@@ -5,6 +5,24 @@ from productive_client import client, ProductiveAPIError
 from utils import filter_response
 
 
+async def _handle_productive_api_error(ctx: Context, e: ProductiveAPIError, resource_type: str = "data") -> None:
+    """Handle ProductiveAPIError consistently across all tool functions.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        e: The ProductiveAPIError exception
+        resource_type: Type of resource being fetched (e.g., "projects", "tasks", "comments")
+    """
+    await ctx.error(f"Productive API error: {e.message}")
+    
+    if e.status_code == 404:
+        await ctx.warning(f"No {resource_type} found")
+    elif e.status_code == 401:
+        await ctx.error("Invalid API token - check configuration")
+    
+    raise e
+
+
 async def get_projects(ctx: Context) -> ToolResult:
     """Get all active projects with budgets, deadlines, and team assignments.
     
@@ -19,50 +37,76 @@ async def get_projects(ctx: Context) -> ToolResult:
         result = await client.get_projects()
         await ctx.info("Successfully retrieved projects")
         filtered = filter_response(result)
-        return ToolResult(structured_content=filtered)
+        
+        # Create human-readable summary
+        project_count = len(filtered.get('data', []))
+        summary = f"Retrieved {project_count} active projects with budgets, deadlines, and team assignments"
+        
+        return ToolResult(
+            content=[summary],
+            structured_content=filtered
+        )
 
     except ProductiveAPIError as e:
-        await ctx.error(f"Productive API error: {e.message}")
-        
-        if e.status_code == 404:
-            await ctx.warning("No projects found")
-        elif e.status_code == 401:
-            await ctx.error("Invalid API token - check configuration")
-            
-        raise e
+        await _handle_productive_api_error(ctx, e, "projects")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching projects: {str(e)}")
-        
         raise e
 
 
-async def get_tasks(ctx: Context) -> ToolResult:
-    """Get all active tasks across all projects with full assignment details.
-    
+async def get_tasks(
+    ctx: Context,
+    project_id: str = None,
+    page_number: int = None,
+    page_size: int = None,
+    extra_filters: dict = None
+) -> ToolResult:
+    """Get tasks with optional filtering and pagination.
+
     Args:
         ctx: MCP context for logging and error handling
-        
+        project_id: Optional Productive project ID to filter tasks by
+        page_number: Optional page number for pagination
+        page_size: Optional page size for pagination
+        extra_filters: Optional dict of additional filter query params using Productive syntax
+                       (e.g. {'filter[status][eq]': 'open'})
+
     Returns:
         Dictionary containing tasks with assignments, time tracking, and project context
     """
     try:
-        await ctx.info("Fetching all tasks")
-        result = await client.get_tasks()
+        await ctx.info("Fetching tasks")
+        params = {}
+        if page_number is not None:
+            params["page[number]"] = page_number
+        if page_size is not None:
+            params["page[size]"] = page_size
+        if project_id is not None:
+            params["filter[project_id][eq]"] = project_id
+        if extra_filters:
+            params.update(extra_filters)
+
+        result = await client.get_tasks(params=params if params else None)
         await ctx.info("Successfully retrieved tasks")
-        
+
         filtered = filter_response(result)
-        return ToolResult(structured_content=filtered)
-        
+
+        # Create human-readable summary (minimal notification)
+        task_count = len(filtered.get("data", []))
+        summary = f"Notification: {task_count} tasks retrieved from productive.get_tasks"
+
+        return ToolResult(
+            content=[summary],
+            structured_content={
+                "data": filtered,
+                "metadata": {
+                    "endpoint": "productive.get_tasks",
+                }
+            }
+        )
+
     except ProductiveAPIError as e:
-        await ctx.error(f"Productive API error: {e.message}")
-        
-        if e.status_code == 404:
-            await ctx.warning("No tasks found")
-        elif e.status_code == 401:
-            await ctx.error("Invalid API token - check configuration")
-            
-        raise e
-        
+        await _handle_productive_api_error(ctx, e, "tasks")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching tasks: {str(e)}")
         raise e
@@ -84,18 +128,19 @@ async def get_task(task_id: str, ctx: Context) -> ToolResult:
         await ctx.info("Successfully retrieved task")
         
         filtered = filter_response(result)
-        return ToolResult(structured_content=filtered)
+        
+        # Create human-readable summary
+        task_data = filtered.get('data', {})
+        task_title = task_data.get('attributes', {}).get('title', 'Unknown')
+        summary = f"Retrieved task '{task_title}' (ID: {task_id}) with complete details and project context"
+        
+        return ToolResult(
+            content=[summary],
+            structured_content=filtered
+        )
         
     except ProductiveAPIError as e:
-        await ctx.error(f"Productive API error: {e.message}")
-        
-        if e.status_code == 404:
-            await ctx.warning(f"Task {task_id} not found")
-        elif e.status_code == 401:
-            await ctx.error("Invalid API token - check configuration")
-            
-        raise e
-        
+        await _handle_productive_api_error(ctx, e, f"task {task_id}")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching task: {str(e)}")
         raise e
@@ -116,18 +161,18 @@ async def get_comments(ctx: Context) -> ToolResult:
         await ctx.info("Successfully retrieved comments")
         
         filtered = filter_response(result)
-        return ToolResult(structured_content=filtered)
+        
+        # Create human-readable summary
+        comment_count = len(filtered.get('data', []))
+        summary = f"Retrieved {comment_count} comments with full context and related entity details"
+        
+        return ToolResult(
+            content=[summary],
+            structured_content=filtered
+        )
         
     except ProductiveAPIError as e:
-        await ctx.error(f"Productive API error: {e.message}")
-        
-        if e.status_code == 404:
-            await ctx.warning("No comments found")
-        elif e.status_code == 401:
-            await ctx.error("Invalid API token - check configuration")
-            
-        raise e
-        
+        await _handle_productive_api_error(ctx, e, "comments")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching comments: {str(e)}")
         raise e
@@ -149,18 +194,21 @@ async def get_comment(comment_id: str, ctx: Context) -> ToolResult:
         await ctx.info("Successfully retrieved comment")
         
         filtered = filter_response(result)
-        return ToolResult(structured_content=filtered)
+        
+        # Create human-readable summary
+        comment_data = filtered.get('data', {})
+        body_preview = comment_data.get('attributes', {}).get('body', '')[:50]
+        if len(body_preview) == 50:
+            body_preview += "..."
+        summary = f"Retrieved comment (ID: {comment_id}): {body_preview}"
+        
+        return ToolResult(
+            content=[summary],
+            structured_content=filtered
+        )
         
     except ProductiveAPIError as e:
-        await ctx.error(f"Productive API error: {e.message}")
-        
-        if e.status_code == 404:
-            await ctx.warning(f"Comment {comment_id} not found")
-        elif e.status_code == 401:
-            await ctx.error("Invalid API token - check configuration")
-            
-        raise e
-        
+        await _handle_productive_api_error(ctx, e, f"comment {comment_id}")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching comment: {str(e)}")
         raise e
@@ -181,18 +229,18 @@ async def get_todos(ctx: Context) -> ToolResult:
         await ctx.info("Successfully retrieved todos")
         
         filtered = filter_response(result)
-        return ToolResult(structured_content=filtered)
+        
+        # Create human-readable summary
+        todo_count = len(filtered.get('data', []))
+        summary = f"Retrieved {todo_count} todo checklist items with task context and completion tracking"
+        
+        return ToolResult(
+            content=[summary],
+            structured_content=filtered
+        )
         
     except ProductiveAPIError as e:
-        await ctx.error(f"Productive API error: {e.message}")
-        
-        if e.status_code == 404:
-            await ctx.warning("No todos found")
-        elif e.status_code == 401:
-            await ctx.error("Invalid API token - check configuration")
-            
-        raise e
-        
+        await _handle_productive_api_error(ctx, e, "todos")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching todos: {str(e)}")
         raise e
@@ -214,18 +262,21 @@ async def get_todo(todo_id: str, ctx: Context) -> ToolResult:
         await ctx.info("Successfully retrieved todo")
         
         filtered = filter_response(result)
-        return ToolResult(structured_content=filtered)
+        
+        # Create human-readable summary
+        todo_data = filtered.get('data', {})
+        todo_title = todo_data.get('attributes', {}).get('name', 'Unknown')
+        is_completed = todo_data.get('attributes', {}).get('completed', False)
+        status = "completed" if is_completed else "pending"
+        summary = f"Retrieved todo '{todo_title}' (ID: {todo_id}) - Status: {status}"
+        
+        return ToolResult(
+            content=[summary],
+            structured_content=filtered
+        )
         
     except ProductiveAPIError as e:
-        await ctx.error(f"Productive API error: {e.message}")
-        
-        if e.status_code == 404:
-            await ctx.warning(f"Todo {todo_id} not found")
-        elif e.status_code == 401:
-            await ctx.error("Invalid API token - check configuration")
-            
-        raise e
-        
+        await _handle_productive_api_error(ctx, e, f"todo {todo_id}")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching todo: {str(e)}")
         raise e
