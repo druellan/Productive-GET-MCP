@@ -1,6 +1,5 @@
 import json
 from fastmcp import Context
-from typing import Dict, Any
 
 from productive_client import client, ProductiveAPIError
 from utils import filter_response
@@ -8,13 +7,6 @@ from utils import filter_response
 
 async def get_projects(ctx: Context) -> str:
     """Get all active projects with budgets, deadlines, and team assignments.
-     
-    Returns comprehensive project data including:
-    - Project budgets, hourly rates, and cost tracking
-    - Team members with roles and hourly rates
-    - Deadlines, start/end dates, and project status
-    - Client information and contact details
-    - Related tasks, comments, and todo-lists
     
     Args:
         ctx: MCP context for logging and error handling
@@ -28,9 +20,9 @@ async def get_projects(ctx: Context) -> str:
         
         await ctx.info("Successfully retrieved projects")
         filtered = filter_response(result)
-        
+
         return json.dumps(filtered)
-    
+
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
         
@@ -48,14 +40,6 @@ async def get_projects(ctx: Context) -> str:
 
 async def get_tasks(ctx: Context) -> str:
     """Get all active tasks across all projects with full assignment details.
-    
-    Returns comprehensive task data including:
-    - Task priorities (low, normal, high, urgent) and statuses
-    - Assigned team members with hourly rates and roles
-    - Estimated hours vs actual hours tracked
-    - Parent project details and client information
-    - Due dates, start dates, and completion tracking
-    - Related comments, attachments, and todo-lists
     
     Args:
         ctx: MCP context for logging and error handling
@@ -88,15 +72,6 @@ async def get_tasks(ctx: Context) -> str:
 
 async def get_task(task_id: str, ctx: Context) -> str:
     """Get detailed task information by ID including all related data.
-    
-    Returns comprehensive task details including:
-    - Task description, priority, and current status
-    - Assigned team member with role and hourly rate
-    - Parent project with budget and client details
-    - Time tracking: estimated vs actual hours
-    - All comments and discussion history
-    - Attached files and checklist items (todos)
-    - Due dates, start dates, and completion timeline
     
     Args:
         task_id: The unique Productive task identifier
@@ -131,13 +106,6 @@ async def get_task(task_id: str, ctx: Context) -> str:
 async def get_comments(ctx: Context) -> str:
     """Get all comments across projects and tasks with full context.
     
-    Returns comprehensive comment data including:
-    - Comment text, author, and timestamp
-    - Parent entity (project, task, or other) with details
-    - Discussion threads and replies
-    - Attachments and file references
-    - Mentions of team members or clients
-    
     Args:
         ctx: MCP context for logging and error handling
         
@@ -169,14 +137,6 @@ async def get_comments(ctx: Context) -> str:
 
 async def get_comment(comment_id: str, ctx: Context) -> str:
     """Get specific comment details with full context and discussion thread.
-    
-    Returns detailed comment information including:
-    - Complete comment text and formatting
-    - Author details and timestamp
-    - Parent entity (project, task, etc.) with full context
-    - Reply thread and conversation flow
-    - Attached files, images, or documents
-    - Mentions and references to team members
     
     Args:
         comment_id: The unique Productive comment identifier
@@ -211,13 +171,6 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
 async def get_todos(ctx: Context) -> str:
     """Get all todo checklist items across all tasks and projects.
     
-    Returns comprehensive todo data including:
-    - Checkbox items within tasks for granular tracking
-    - Completion status and assignee information
-    - Parent task details with project context
-    - Due dates and priority relative to parent task
-    - Estimated vs actual time for checklist items
-    
     Args:
         ctx: MCP context for logging and error handling
         
@@ -249,14 +202,6 @@ async def get_todos(ctx: Context) -> str:
 
 async def get_todo(todo_id: str, ctx: Context) -> str:
     """Get specific todo checklist item details with full task context.
-    
-    Returns detailed todo information including:
-    - Checkbox item text and completion status
-    - Parent task with project and client details
-    - Assignee and team member information
-    - Due date relative to parent task timeline
-    - Time estimates vs actual completion time
-    - Related comments and file attachments
     
     Args:
         todo_id: The unique Productive todo checklist item identifier
