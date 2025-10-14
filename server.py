@@ -30,7 +30,7 @@ async def get_projects(ctx: Context) -> str:
     """Get all projects from Productive
     
     Returns:
-        List of projects with their details in YAML format
+        List of projects with their details in JSON format
     """
     return await tools.get_projects(ctx)
 
@@ -39,7 +39,7 @@ async def get_tasks(ctx: Context) -> str:
     """Get all tasks from Productive
     
     Returns:
-        List of tasks with their details in YAML format
+        List of tasks with their details in JSON format
     """
     return await tools.get_tasks(ctx)
 
@@ -51,7 +51,7 @@ async def get_task(task_id: str, ctx: Context) -> str:
         task_id: The Productive task ID
         
     Returns:
-        Task details in YAML format
+        Task details in JSON format
     """
     return await tools.get_task(task_id, ctx)
 
@@ -60,7 +60,7 @@ async def get_comments(ctx: Context) -> str:
     """Get all comments from Productive
     
     Returns:
-        List of comments with their details in YAML format
+        List of comments with their details in JSON format
     """
     return await tools.get_comments(ctx)
 
@@ -72,7 +72,7 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
         comment_id: The Productive comment ID
         
     Returns:
-        Comment details in YAML format
+        Comment details in JSON format
     """
     return await tools.get_comment(comment_id, ctx)
 
@@ -81,7 +81,7 @@ async def get_todos(ctx: Context) -> str:
     """Get all todos from Productive
     
     Returns:
-        List of todos with their details in YAML format
+        List of todos with their details in JSON format
     """
     return await tools.get_todos(ctx)
 
@@ -93,7 +93,7 @@ async def get_todo(todo_id: str, ctx: Context) -> str:
         todo_id: The Productive todo ID
         
     Returns:
-        Todo details in YAML format
+        Todo details in JSON format
     """
     return await tools.get_todo(todo_id, ctx)
 

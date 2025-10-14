@@ -1,9 +1,9 @@
+import json
 from fastmcp import Context
 from typing import Dict, Any
 
 from productive_client import client, ProductiveAPIError
 from utils import filter_response
-from yaml_utils import convert_json_to_yaml
 
 
 async def get_projects(ctx: Context) -> str:
@@ -20,7 +20,7 @@ async def get_projects(ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All projects with full project details, budgets, and team assignments in YAML format
+        All projects with full project details, budgets, and team assignments in JSON format
     """
     try:
         await ctx.info("Fetching all projects")
@@ -29,7 +29,7 @@ async def get_projects(ctx: Context) -> str:
         await ctx.info("Successfully retrieved projects")
         filtered = filter_response(result)
         
-        return convert_json_to_yaml(filtered)
+        return json.dumps(filtered, indent=2, ensure_ascii=False)
     
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -61,7 +61,7 @@ async def get_tasks(ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All tasks with assignments, time tracking, and project context in YAML format
+        All tasks with assignments, time tracking, and project context in JSON format
     """
     try:
         await ctx.info("Fetching all tasks")
@@ -69,7 +69,7 @@ async def get_tasks(ctx: Context) -> str:
         await ctx.info("Successfully retrieved tasks")
         
         filtered = filter_response(result)
-        return convert_json_to_yaml(filtered)
+        return json.dumps(filtered, indent=2, ensure_ascii=False)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -103,7 +103,7 @@ async def get_task(task_id: str, ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        Complete task details with project context and all related data in YAML format
+        Complete task details with project context and all related data in JSON format
     """
     try:
         await ctx.info(f"Fetching task with ID: {task_id}")
@@ -111,7 +111,7 @@ async def get_task(task_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved task")
         
         filtered = filter_response(result)
-        return convert_json_to_yaml(filtered)
+        return json.dumps(filtered, indent=2, ensure_ascii=False)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -142,7 +142,7 @@ async def get_comments(ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All comments with full context and related entity details in YAML format
+        All comments with full context and related entity details in JSON format
     """
     try:
         await ctx.info("Fetching all comments")
@@ -150,7 +150,7 @@ async def get_comments(ctx: Context) -> str:
         await ctx.info("Successfully retrieved comments")
         
         filtered = filter_response(result)
-        return convert_json_to_yaml(filtered)
+        return json.dumps(filtered, indent=2, ensure_ascii=False)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -183,7 +183,7 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        Complete comment details with full context and discussion thread in YAML format
+        Complete comment details with full context and discussion thread in JSON format
     """
     try:
         await ctx.info(f"Fetching comment with ID: {comment_id}")
@@ -191,7 +191,7 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved comment")
         
         filtered = filter_response(result)
-        return convert_json_to_yaml(filtered)
+        return json.dumps(filtered, indent=2, ensure_ascii=False)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -222,7 +222,7 @@ async def get_todos(ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All todo checklist items with task context and completion tracking in YAML format
+        All todo checklist items with task context and completion tracking in JSON format
     """
     try:
         await ctx.info("Fetching all todos")
@@ -230,7 +230,7 @@ async def get_todos(ctx: Context) -> str:
         await ctx.info("Successfully retrieved todos")
         
         filtered = filter_response(result)
-        return convert_json_to_yaml(filtered)
+        return json.dumps(filtered, indent=2, ensure_ascii=False)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -263,7 +263,7 @@ async def get_todo(todo_id: str, ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        Complete todo checklist item with full task context and tracking details in YAML format
+        Complete todo checklist item with full task context and tracking details in JSON format
     """
     try:
         await ctx.info(f"Fetching todo with ID: {todo_id}")
@@ -271,7 +271,7 @@ async def get_todo(todo_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved todo")
         
         filtered = filter_response(result)
-        return convert_json_to_yaml(filtered)
+        return json.dumps(filtered, indent=2, ensure_ascii=False)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")

@@ -15,14 +15,13 @@ For full API access and extended functionality, check BerwickGeek's implementati
 - **Get Comment by ID**: Retrieve a specific comment
 - **Get Todos**: Retrieve all todos
 - **Get Todo by ID**: Retrieve a specific todo
-- **YAML Output**: All responses are converted from JSON API format to YAML for better LLM readability and less token usage
+- **Filtered JSON Output**: All responses are filtered for readability and returned as JSON objects
 
 ## Requirements
 
 - Python 3.8+
 - Productive API token
 - FastMCP 2.0+
-- PyYAML 6.0+
 
 ## Installation
 
@@ -101,7 +100,7 @@ Retrieve a specific todo by ID. Returns detailed todo information including attr
 
 ## Output Format
 
-All tools return data in YAML format for improved readability and LLM processing.
+All tools return data in filtered JSON format for improved readability and LLM processing.
 The output is filtered to remove empty, null or redundant information.
 
 - `data`: Contains the main resource data (array for collections, object for single items)
@@ -109,28 +108,38 @@ The output is filtered to remove empty, null or redundant information.
 - `links`: Contains pagination links (for collection endpoints)
 - `included`: Contains related resource data (when relationships are included)
 
-Example YAML output for projects:
-```yaml
-data:
-- id: '628'
-  type: projects
-  attributes:
-    name: test project
-    number: '1'
-    project_type_id: 2
-    created_at: '2025-10-12T06:07:57.592+02:00'
-    archived_at: null
-  relationships:
-    organization:
-      data:
-        type: organizations
-        id: '3003'
-meta:
-  current_page: 1
-  total_pages: 1
-  total_count: 3
-  page_size: 30
-  max_page_size: 200
+Example JSON output for projects:
+```json
+{
+  "data": [
+    {
+      "id": "628",
+      "type": "projects",
+      "attributes": {
+        "name": "test project",
+        "number": "1",
+        "project_type_id": 2,
+        "created_at": "2025-10-12T06:07:57.592+02:00",
+        "archived_at": null
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "3003"
+          }
+        }
+      }
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "total_pages": 1,
+    "total_count": 3,
+    "page_size": 30,
+    "max_page_size": 200
+  }
+}
 ```
 
 ## Error Handling
