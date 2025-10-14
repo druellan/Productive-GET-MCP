@@ -1,27 +1,25 @@
-import json
 from fastmcp import Context
+from fastmcp.tools.tool import ToolResult
 
 from productive_client import client, ProductiveAPIError
 from utils import filter_response
 
 
-async def get_projects(ctx: Context) -> str:
+async def get_projects(ctx: Context) -> ToolResult:
     """Get all active projects with budgets, deadlines, and team assignments.
     
     Args:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All projects with full project details, budgets, and team assignments in JSON format
+        Dictionary containing projects with full project details, budgets, and team assignments
     """
     try:
         await ctx.info("Fetching all projects")
         result = await client.get_projects()
-        
         await ctx.info("Successfully retrieved projects")
         filtered = filter_response(result)
-
-        return json.dumps(filtered)
+        return ToolResult(structured_content=filtered)
 
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -38,14 +36,14 @@ async def get_projects(ctx: Context) -> str:
         raise e
 
 
-async def get_tasks(ctx: Context) -> str:
+async def get_tasks(ctx: Context) -> ToolResult:
     """Get all active tasks across all projects with full assignment details.
     
     Args:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All tasks with assignments, time tracking, and project context in JSON format
+        Dictionary containing tasks with assignments, time tracking, and project context
     """
     try:
         await ctx.info("Fetching all tasks")
@@ -53,7 +51,7 @@ async def get_tasks(ctx: Context) -> str:
         await ctx.info("Successfully retrieved tasks")
         
         filtered = filter_response(result)
-        return json.dumps(filtered)
+        return ToolResult(structured_content=filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -70,7 +68,7 @@ async def get_tasks(ctx: Context) -> str:
         raise e
 
 
-async def get_task(task_id: str, ctx: Context) -> str:
+async def get_task(task_id: str, ctx: Context) -> ToolResult:
     """Get detailed task information by ID including all related data.
     
     Args:
@@ -78,7 +76,7 @@ async def get_task(task_id: str, ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        Complete task details with project context and all related data in JSON format
+        Dictionary with complete task details and project context
     """
     try:
         await ctx.info(f"Fetching task with ID: {task_id}")
@@ -86,7 +84,7 @@ async def get_task(task_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved task")
         
         filtered = filter_response(result)
-        return json.dumps(filtered)
+        return ToolResult(structured_content=filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -103,14 +101,14 @@ async def get_task(task_id: str, ctx: Context) -> str:
         raise e
 
 
-async def get_comments(ctx: Context) -> str:
+async def get_comments(ctx: Context) -> ToolResult:
     """Get all comments across projects and tasks with full context.
     
     Args:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All comments with full context and related entity details in JSON format
+        Dictionary of comments with full context and related entity details
     """
     try:
         await ctx.info("Fetching all comments")
@@ -118,7 +116,7 @@ async def get_comments(ctx: Context) -> str:
         await ctx.info("Successfully retrieved comments")
         
         filtered = filter_response(result)
-        return json.dumps(filtered)
+        return ToolResult(structured_content=filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -135,7 +133,7 @@ async def get_comments(ctx: Context) -> str:
         raise e
 
 
-async def get_comment(comment_id: str, ctx: Context) -> str:
+async def get_comment(comment_id: str, ctx: Context) -> ToolResult:
     """Get specific comment details with full context and discussion thread.
     
     Args:
@@ -143,7 +141,7 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        Complete comment details with full context and discussion thread in JSON format
+        Dictionary with complete comment details and discussion thread
     """
     try:
         await ctx.info(f"Fetching comment with ID: {comment_id}")
@@ -151,7 +149,7 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved comment")
         
         filtered = filter_response(result)
-        return json.dumps(filtered)
+        return ToolResult(structured_content=filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -168,14 +166,14 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
         raise e
 
 
-async def get_todos(ctx: Context) -> str:
+async def get_todos(ctx: Context) -> ToolResult:
     """Get all todo checklist items across all tasks and projects.
     
     Args:
         ctx: MCP context for logging and error handling
         
     Returns:
-        All todo checklist items with task context and completion tracking in JSON format
+        Dictionary of todo checklist items with task context and completion tracking
     """
     try:
         await ctx.info("Fetching all todos")
@@ -183,7 +181,7 @@ async def get_todos(ctx: Context) -> str:
         await ctx.info("Successfully retrieved todos")
         
         filtered = filter_response(result)
-        return json.dumps(filtered)
+        return ToolResult(structured_content=filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")
@@ -200,7 +198,7 @@ async def get_todos(ctx: Context) -> str:
         raise e
 
 
-async def get_todo(todo_id: str, ctx: Context) -> str:
+async def get_todo(todo_id: str, ctx: Context) -> ToolResult:
     """Get specific todo checklist item details with full task context.
     
     Args:
@@ -208,7 +206,7 @@ async def get_todo(todo_id: str, ctx: Context) -> str:
         ctx: MCP context for logging and error handling
         
     Returns:
-        Complete todo checklist item with full task context and tracking details in JSON format
+        Dictionary of todo checklist item with full task context and tracking details
     """
     try:
         await ctx.info(f"Fetching todo with ID: {todo_id}")
@@ -216,7 +214,7 @@ async def get_todo(todo_id: str, ctx: Context) -> str:
         await ctx.info("Successfully retrieved todo")
         
         filtered = filter_response(result)
-        return json.dumps(filtered)
+        return ToolResult(structured_content=filtered)
         
     except ProductiveAPIError as e:
         await ctx.error(f"Productive API error: {e.message}")

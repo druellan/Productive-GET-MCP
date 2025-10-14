@@ -1,4 +1,5 @@
 from fastmcp import FastMCP, Context
+from typing import Any, Dict
 from config import config
 from productive_client import client
 import tools
@@ -26,7 +27,7 @@ mcp = FastMCP(
 )
 
 @mcp.tool
-async def get_projects(ctx: Context) -> str:
+async def get_projects(ctx: Context) -> Dict[str, Any]:
     """Get all active projects with budgets, deadlines, and team assignments.
 
     Returns comprehensive project data including:
@@ -38,7 +39,7 @@ async def get_projects(ctx: Context) -> str:
     return await tools.get_projects(ctx)
 
 @mcp.tool
-async def get_tasks(ctx: Context) -> str:
+async def get_tasks(ctx: Context) -> Dict[str, Any]:
     """Get all active tasks across all projects with full assignment details.
 
     Returns comprehensive task data including:
@@ -52,7 +53,7 @@ async def get_tasks(ctx: Context) -> str:
     return await tools.get_tasks(ctx)
 
 @mcp.tool
-async def get_task(task_id: str, ctx: Context) -> str:
+async def get_task(task_id: str, ctx: Context) -> Dict[str, Any]:
     """Get detailed task information by ID including all related data.
 
     Returns comprehensive task details including:
@@ -70,7 +71,7 @@ async def get_task(task_id: str, ctx: Context) -> str:
     return await tools.get_task(task_id, ctx)
 
 @mcp.tool
-async def get_comments(ctx: Context) -> str:
+async def get_comments(ctx: Context) -> Dict[str, Any]:
     """Get all comments across projects and tasks with full context.
 
     Returns comprehensive comment data including:
@@ -83,7 +84,7 @@ async def get_comments(ctx: Context) -> str:
     return await tools.get_comments(ctx)
 
 @mcp.tool
-async def get_comment(comment_id: str, ctx: Context) -> str:
+async def get_comment(comment_id: str, ctx: Context) -> Dict[str, Any]:
     """Get specific comment details with full context and discussion thread.
 
     Returns detailed comment information including:
@@ -100,7 +101,7 @@ async def get_comment(comment_id: str, ctx: Context) -> str:
     return await tools.get_comment(comment_id, ctx)
 
 @mcp.tool
-async def get_todos(ctx: Context) -> str:
+async def get_todos(ctx: Context) -> Dict[str, Any]:
     """Get all todo checklist items across all tasks and projects.
 
     Returns comprehensive todo data including:
@@ -113,7 +114,7 @@ async def get_todos(ctx: Context) -> str:
     return await tools.get_todos(ctx)
 
 @mcp.tool
-async def get_todo(todo_id: str, ctx: Context) -> str:
+async def get_todo(todo_id: str, ctx: Context) -> Dict[str, Any]:
     """Get specific todo checklist item details with full task context.
 
     Returns detailed todo information including:
