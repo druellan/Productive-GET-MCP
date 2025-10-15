@@ -146,31 +146,56 @@ async def get_task(task_id: str, ctx: Context) -> ToolResult:
         raise e
 
 
-async def get_comments(ctx: Context) -> ToolResult:
+async def get_comments(
+    ctx: Context,
+    project_id: str = None,
+    task_id: str = None,
+    page_number: int = None,
+    page_size: int = None,
+    extra_filters: dict = None
+) -> ToolResult:
     """Get all comments across projects and tasks with full context.
-    
+
     Args:
         ctx: MCP context for logging and error handling
-        
+        project_id: Optional Productive project ID to filter comments by
+        task_id: Optional Productive task ID to filter comments by
+        page_number: Optional page number for pagination
+        page_size: Optional page size for pagination
+        extra_filters: Optional dict of additional filter query params using Productive syntax
+                       (e.g. {'filter[discussion_id]': '123', 'filter[page_id][]': ['1', '2']})
+
     Returns:
         Dictionary of comments with full context and related entity details
     """
     try:
-        await ctx.info("Fetching all comments")
-        result = await client.get_comments()
+        await ctx.info("Fetching comments")
+        params = {}
+        if page_number is not None:
+            params["page[number]"] = page_number
+        if page_size is not None:
+            params["page[size]"] = page_size
+        if project_id is not None:
+            params["filter[project_id][]"] = project_id
+        if task_id is not None:
+            params["filter[task_id]"] = task_id
+        if extra_filters:
+            params.update(extra_filters)
+
+        result = await client.get_comments(params=params if params else None)
         await ctx.info("Successfully retrieved comments")
-        
+
         filtered = filter_response(result)
-        
+
         # Create human-readable summary
-        comment_count = len(filtered.get('data', []))
+        comment_count = len(filtered.get("data", []))
         summary = f"Retrieved {comment_count} comments with full context and related entity details"
-        
+
         return ToolResult(
             content=[summary],
             structured_content=filtered,
         )
-        
+
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, "comments")
     except Exception as e:

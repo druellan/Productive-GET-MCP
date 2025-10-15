@@ -66,9 +66,14 @@ class ProductiveClient:
         """Get task by ID"""
         return await self._request("GET", f"/tasks/{task_id}")
 
-    async def get_comments(self) -> Dict[str, Any]:
-        """Get all comments"""
-        return await self._request("GET", "/comments")
+    async def get_comments(self, params: Optional[dict] = None) -> Dict[str, Any]:
+        """Get all comments
+
+        Params:
+            params: Optional dict of query parameters to pass to the Productive API
+                    (e.g. pagination or filter params like {'page[number]': 2, 'page[size]': 30, 'filter[project_id]': '343136'})
+        """
+        return await self._request("GET", "/comments", params=params)
 
     async def get_comment(self, comment_id: str) -> Dict[str, Any]:
         """Get comment by ID"""

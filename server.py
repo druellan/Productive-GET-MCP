@@ -42,11 +42,27 @@ async def get_projects(ctx: Context) -> Dict[str, Any]:
 @mcp.tool
 async def get_tasks(
     ctx: Context,
-    project_id: Annotated[str, Field(description="Productive project ID to filter tasks by")] = None,
-    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
-    page_size: Annotated[int, Field(description="Number of tasks per page (max 200)")] = None,
-    sort: Annotated[str, Field(description="Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date'). Use '-' prefix for descending order. Defaults to '-last_activity_at' (most recent first).")] = "-last_activity_at",
-    extra_filters: Annotated[dict, Field(description="Additional Productive query filters (e.g. {'filter[status][eq]': 'open'})")] = None
+    project_id: Annotated[
+        str, Field(description="Productive project ID (string) to filter tasks by")
+    ] = None,
+    page_number: Annotated[
+        int, Field(description="Page number for pagination")
+    ] = None,
+    page_size: Annotated[
+        int, Field(description="Number of tasks per page (max 200)")
+    ] = None,
+    sort: Annotated[
+        str,
+        Field(
+            description="Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date'). Use '-' prefix for descending order. Defaults to '-last_activity_at' (most recent first)."
+        ),
+    ] = "-last_activity_at",
+    extra_filters: Annotated[
+        dict,
+        Field(
+            description="Additional Productive query filters (e.g. {'filter[status][eq]': 'open'})"
+        ),
+    ] = None,
 ) -> Dict[str, Any]:
     """Get tasks with optional filtering and pagination.
 
@@ -82,12 +98,19 @@ async def get_task(task_id: str, ctx: Context) -> Dict[str, Any]:
     - Due dates, start dates, and completion timeline
 
     Args:
-        task_id: The Productive task ID
+        task_id: Productive task ID (string)
     """
     return await tools.get_task(task_id, ctx)
 
 @mcp.tool
-async def get_comments(ctx: Context) -> Dict[str, Any]:
+async def get_comments(
+    ctx: Context,
+    project_id: Annotated[str, Field(description="Productive project ID (string) to filter comments by")] = None,
+    task_id: Annotated[str, Field(description="Productive task ID (string) to filter comments by")] = None,
+    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
+    page_size: Annotated[int, Field(description="Number of comments per page (max 200)")] = None,
+    extra_filters: Annotated[dict, Field(description="Additional Productive query filters (e.g. {'filter[discussion_id]': '123'})")] = None
+) -> Dict[str, Any]:
     """Get all comments across projects and tasks with full context.
 
     Returns comprehensive comment data including:
@@ -97,7 +120,14 @@ async def get_comments(ctx: Context) -> Dict[str, Any]:
     - Attachments and file references
     - Mentions of team members or clients
     """
-    return await tools.get_comments(ctx)
+    return await tools.get_comments(
+        ctx,
+        project_id=project_id,
+        task_id=task_id,
+        page_number=page_number,
+        page_size=page_size,
+        extra_filters=extra_filters
+    )
 
 @mcp.tool
 async def get_comment(comment_id: str, ctx: Context) -> Dict[str, Any]:
@@ -112,7 +142,7 @@ async def get_comment(comment_id: str, ctx: Context) -> Dict[str, Any]:
     - Mentions and references to team members
 
     Args:
-        comment_id: The Productive comment ID
+        comment_id: Productive comment ID (string)
     """
     return await tools.get_comment(comment_id, ctx)
 
@@ -142,7 +172,7 @@ async def get_todo(todo_id: str, ctx: Context) -> Dict[str, Any]:
     - Related comments and file attachments
 
     Args:
-        todo_id: The Productive todo ID
+        todo_id: The Productive todo ID (must be string format)
     """
     return await tools.get_todo(todo_id, ctx)
 
