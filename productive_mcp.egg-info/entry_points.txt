@@ -1,0 +1,3 @@
+[console_scripts]
+productive = server:main
+productive-client = productive_client:main

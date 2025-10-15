@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+productive_mcp.egg-info/PKG-INFO
+productive_mcp.egg-info/SOURCES.txt
+productive_mcp.egg-info/dependency_links.txt
+productive_mcp.egg-info/entry_points.txt
+productive_mcp.egg-info/requires.txt
+productive_mcp.egg-info/top_level.txt

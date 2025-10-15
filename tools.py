@@ -98,7 +98,7 @@ async def get_tasks(
         raise e
 
 
-async def get_task(task_id: str, ctx: Context) -> ToolResult:
+async def get_task(task_id: int, ctx: Context) -> ToolResult:
     """Get detailed task information by ID including all related data.
     
     Args:
@@ -174,7 +174,7 @@ async def get_comments(
         raise e
 
 
-async def get_comment(comment_id: str, ctx: Context) -> ToolResult:
+async def get_comment(comment_id: int, ctx: Context) -> ToolResult:
     """Get specific comment details with full context and discussion thread.
     
     Args:
@@ -245,7 +245,7 @@ async def get_todos(
         raise e
 
 
-async def get_todo(todo_id: str, ctx: Context) -> ToolResult:
+async def get_todo(todo_id: int, ctx: Context) -> ToolResult:
     """Get specific todo checklist item details with full task context.
     
     Args:

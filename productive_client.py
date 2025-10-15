@@ -58,27 +58,27 @@ class ProductiveClient:
         """
         return await self._request("GET", "/tasks", params=params)
 
-    async def get_task(self, task_id: str) -> Dict[str, Any]:
+    async def get_task(self, task_id: int) -> Dict[str, Any]:
         """Get task by ID"""
-        return await self._request("GET", f"/tasks/{task_id}")
+        return await self._request("GET", f"/tasks/{str(task_id)}")
 
     async def get_comments(self, params: Optional[dict] = None) -> Dict[str, Any]:
         """Get all comments
         """
         return await self._request("GET", "/comments", params=params)
 
-    async def get_comment(self, comment_id: str) -> Dict[str, Any]:
+    async def get_comment(self, comment_id: int) -> Dict[str, Any]:
         """Get comment by ID"""
-        return await self._request("GET", f"/comments/{comment_id}")
+        return await self._request("GET", f"/comments/{str(comment_id)}")
 
     async def get_todos(self, params: Optional[dict] = None) -> Dict[str, Any]:
         """Get all todos
         """
         return await self._request("GET", "/todos", params=params)
 
-    async def get_todo(self, todo_id: str) -> Dict[str, Any]:
+    async def get_todo(self, todo_id: int) -> Dict[str, Any]:
         """Get todo by ID"""
-        return await self._request("GET", f"/todos/{todo_id}")
+        return await self._request("GET", f"/todos/{str(todo_id)}")
 
     async def close(self):
         """Close HTTP client"""
