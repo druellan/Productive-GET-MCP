@@ -56,7 +56,7 @@ async def get_projects(ctx: Context) -> ToolResult:
 
 async def get_tasks(
     ctx: Context,
-    project_id: str = None,
+    project_id: int = None,
     page_number: int = None,
     page_size: int = None,
     sort: str = "-last_activity_at",
@@ -148,11 +148,11 @@ async def get_task(task_id: str, ctx: Context) -> ToolResult:
 
 async def get_comments(
     ctx: Context,
-    project_id: str = None,
-    task_id: str = None,
+    project_id: int = None,
+    task_id: int = None,
     page_number: int = None,
     page_size: int = None,
-    extra_filters: dict = None
+    extra_filters: dict = None,
 ) -> ToolResult:
     """Get all comments across projects and tasks with full context.
 
@@ -239,25 +239,45 @@ async def get_comment(comment_id: str, ctx: Context) -> ToolResult:
         raise e
 
 
-async def get_todos(ctx: Context) -> ToolResult:
+async def get_todos(
+    ctx: Context,
+    task_id: int = None,
+    page_number: int = None,
+    page_size: int = None,
+    extra_filters: dict = None
+) -> ToolResult:
     """Get all todo checklist items across all tasks and projects.
     
     Args:
         ctx: MCP context for logging and error handling
+        task_id: Optional task ID (string) to filter todos by
+        page_number: Optional page number for pagination
+        page_size: Optional page size (max 200)
+        extra_filters: Optional dict of additional Productive API filters
         
     Returns:
         Dictionary of todo checklist items with task context and completion tracking
     """
     try:
-        await ctx.info("Fetching all todos")
-        result = await client.get_todos()
+        await ctx.info("Fetching todos")
+        params = {}
+        if page_number is not None:
+            params["page[number]"] = page_number
+        if page_size is not None:
+            params["page[size]"] = page_size
+        if task_id is not None:
+            params["filter[task_id]"] = [task_id]
+        if extra_filters:
+            params.update(extra_filters)
+
+        result = await client.get_todos(params=params if params else None)
         await ctx.info("Successfully retrieved todos")
         
         filtered = filter_response(result)
         
         # Create human-readable summary
         todo_count = len(filtered.get('data', []))
-        summary = f"Retrieved {todo_count} todo checklist items with task context and completion tracking"
+        summary = f"Notification: {todo_count} todos retrieved from productive.get_todos"
         
         return ToolResult(
             content=[summary],

@@ -43,7 +43,7 @@ async def get_projects(ctx: Context) -> Dict[str, Any]:
 async def get_tasks(
     ctx: Context,
     project_id: Annotated[
-        str, Field(description="Productive project ID (string) to filter tasks by")
+        int, Field(description="Productive project ID to filter tasks by")
     ] = None,
     page_number: Annotated[
         int, Field(description="Page number for pagination")
@@ -85,7 +85,7 @@ async def get_tasks(
     )
 
 @mcp.tool
-async def get_task(task_id: str, ctx: Context) -> Dict[str, Any]:
+async def get_task(task_id: int, ctx: Context) -> Dict[str, Any]:
     """Get detailed task information by ID including all related data.
 
     Returns comprehensive task details including:
@@ -98,18 +98,29 @@ async def get_task(task_id: str, ctx: Context) -> Dict[str, Any]:
     - Due dates, start dates, and completion timeline
 
     Args:
-        task_id: Productive task ID (string)
+        task_id: Productive task ID
     """
     return await tools.get_task(task_id, ctx)
 
 @mcp.tool
 async def get_comments(
     ctx: Context,
-    project_id: Annotated[str, Field(description="Productive project ID (string) to filter comments by")] = None,
-    task_id: Annotated[str, Field(description="Productive task ID (string) to filter comments by")] = None,
+    project_id: Annotated[
+        int, Field(description="Productive project ID to filter comments by")
+    ] = None,
+    task_id: Annotated[
+        int, Field(description="Productive task ID to filter comments by")
+    ] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
-    page_size: Annotated[int, Field(description="Number of comments per page (max 200)")] = None,
-    extra_filters: Annotated[dict, Field(description="Additional Productive query filters (e.g. {'filter[discussion_id]': '123'})")] = None
+    page_size: Annotated[
+        int, Field(description="Number of comments per page (max 200)")
+    ] = None,
+    extra_filters: Annotated[
+        dict,
+        Field(
+            description="Additional Productive query filters (e.g. {'filter[discussion_id]': '123'})"
+        ),
+    ] = None,
 ) -> Dict[str, Any]:
     """Get all comments across projects and tasks with full context.
 
@@ -130,7 +141,7 @@ async def get_comments(
     )
 
 @mcp.tool
-async def get_comment(comment_id: str, ctx: Context) -> Dict[str, Any]:
+async def get_comment(comment_id: int, ctx: Context) -> Dict[str, Any]:
     """Get specific comment details with full context and discussion thread.
 
     Returns detailed comment information including:
@@ -142,12 +153,18 @@ async def get_comment(comment_id: str, ctx: Context) -> Dict[str, Any]:
     - Mentions and references to team members
 
     Args:
-        comment_id: Productive comment ID (string)
+        comment_id: Productive comment ID
     """
     return await tools.get_comment(comment_id, ctx)
 
 @mcp.tool
-async def get_todos(ctx: Context) -> Dict[str, Any]:
+async def get_todos(
+    ctx: Context,
+    task_id: Annotated[int, Field(description="Productive task ID to filter todos by")] = None,
+    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
+    page_size: Annotated[int, Field(description="Number of todos per page (max 200)")] = None,
+    extra_filters: Annotated[dict, Field(description="Additional Productive query filters (e.g. {'filter[status]': '1'})")] = None
+) -> Dict[str, Any]:
     """Get all todo checklist items across all tasks and projects.
 
     Returns comprehensive todo data including:
@@ -157,10 +174,16 @@ async def get_todos(ctx: Context) -> Dict[str, Any]:
     - Due dates and priority relative to parent task
     - Estimated vs actual time for checklist items
     """
-    return await tools.get_todos(ctx)
+    return await tools.get_todos(
+        ctx,
+        task_id=task_id,
+        page_number=page_number,
+        page_size=page_size,
+        extra_filters=extra_filters
+    )
 
 @mcp.tool
-async def get_todo(todo_id: str, ctx: Context) -> Dict[str, Any]:
+async def get_todo(todo_id: int, ctx: Context) -> Dict[str, Any]:
     """Get specific todo checklist item details with full task context.
 
     Returns detailed todo information including:
@@ -172,7 +195,7 @@ async def get_todo(todo_id: str, ctx: Context) -> Dict[str, Any]:
     - Related comments and file attachments
 
     Args:
-        todo_id: The Productive todo ID (must be string format)
+        todo_id: The Productive todo ID
     """
     return await tools.get_todo(todo_id, ctx)
 

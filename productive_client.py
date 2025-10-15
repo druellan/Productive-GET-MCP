@@ -55,10 +55,6 @@ class ProductiveClient:
 
     async def get_tasks(self, params: Optional[dict] = None) -> Dict[str, Any]:
         """Get all tasks
-
-        Params:
-            params: Optional dict of query parameters to pass to the Productive API
-                    (e.g. pagination or filter params like {'page[number]': 2, 'page[size]': 30, 'filter[project_id][eq]': '343136'})
         """
         return await self._request("GET", "/tasks", params=params)
 
@@ -68,10 +64,6 @@ class ProductiveClient:
 
     async def get_comments(self, params: Optional[dict] = None) -> Dict[str, Any]:
         """Get all comments
-
-        Params:
-            params: Optional dict of query parameters to pass to the Productive API
-                    (e.g. pagination or filter params like {'page[number]': 2, 'page[size]': 30, 'filter[project_id]': '343136'})
         """
         return await self._request("GET", "/comments", params=params)
 
@@ -79,9 +71,10 @@ class ProductiveClient:
         """Get comment by ID"""
         return await self._request("GET", f"/comments/{comment_id}")
 
-    async def get_todos(self) -> Dict[str, Any]:
-        """Get all todos"""
-        return await self._request("GET", "/todos")
+    async def get_todos(self, params: Optional[dict] = None) -> Dict[str, Any]:
+        """Get all todos
+        """
+        return await self._request("GET", "/todos", params=params)
 
     async def get_todo(self, todo_id: str) -> Dict[str, Any]:
         """Get todo by ID"""
