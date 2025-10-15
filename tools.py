@@ -37,15 +37,8 @@ async def get_projects(ctx: Context) -> ToolResult:
         result = await client.get_projects()
         await ctx.info("Successfully retrieved projects")
         filtered = filter_response(result)
-        
-        # Create human-readable summary
-        project_count = len(filtered.get('data', []))
-        summary = f"Retrieved {project_count} active projects with budgets, deadlines, and team assignments"
-        
-        return ToolResult(
-            content=[summary],
-            structured_content=filtered
-        )
+
+        return filtered
 
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, "projects")
@@ -96,14 +89,7 @@ async def get_tasks(
 
         filtered = filter_response(result)
 
-        # Create human-readable summary (minimal notification)
-        task_count = len(filtered.get("data", []))
-        summary = f"Notification: {task_count} tasks retrieved from productive.get_tasks"
-
-        return ToolResult(
-            content=[summary],
-            structured_content=filtered
-        )
+        return filtered
 
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, "tasks")
@@ -129,15 +115,7 @@ async def get_task(task_id: str, ctx: Context) -> ToolResult:
         
         filtered = filter_response(result)
         
-        # Create human-readable summary
-        task_data = filtered.get('data', {})
-        task_title = task_data.get('attributes', {}).get('title', 'Unknown')
-        summary = f"Retrieved task '{task_title}' (ID: {task_id}) with complete details and project context"
-        
-        return ToolResult(
-            content=[summary],
-            structured_content=filtered,
-        )
+        return filtered
         
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, f"task {task_id}")
@@ -187,14 +165,7 @@ async def get_comments(
 
         filtered = filter_response(result)
 
-        # Create human-readable summary
-        comment_count = len(filtered.get("data", []))
-        summary = f"Retrieved {comment_count} comments with full context and related entity details"
-
-        return ToolResult(
-            content=[summary],
-            structured_content=filtered,
-        )
+        return filtered
 
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, "comments")
@@ -220,17 +191,7 @@ async def get_comment(comment_id: str, ctx: Context) -> ToolResult:
         
         filtered = filter_response(result)
         
-        # Create human-readable summary
-        comment_data = filtered.get('data', {})
-        body_preview = comment_data.get('attributes', {}).get('body', '')[:50]
-        if len(body_preview) == 50:
-            body_preview += "..."
-        summary = f"Retrieved comment (ID: {comment_id}): {body_preview}"
-        
-        return ToolResult(
-            content=[summary],
-            structured_content=filtered
-        )
+        return filtered
         
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, f"comment {comment_id}")
@@ -275,14 +236,7 @@ async def get_todos(
         
         filtered = filter_response(result)
         
-        # Create human-readable summary
-        todo_count = len(filtered.get('data', []))
-        summary = f"Notification: {todo_count} todos retrieved from productive.get_todos"
-        
-        return ToolResult(
-            content=[summary],
-            structured_content=filtered
-        )
+        return filtered
         
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, "todos")
@@ -308,17 +262,7 @@ async def get_todo(todo_id: str, ctx: Context) -> ToolResult:
         
         filtered = filter_response(result)
         
-        # Create human-readable summary
-        todo_data = filtered.get('data', {})
-        todo_title = todo_data.get('attributes', {}).get('name', 'Unknown')
-        is_completed = todo_data.get('attributes', {}).get('completed', False)
-        status = "completed" if is_completed else "pending"
-        summary = f"Retrieved todo '{todo_title}' (ID: {todo_id}) - Status: {status}"
-        
-        return ToolResult(
-            content=[summary],
-            structured_content=filtered
-        )
+        return filtered
         
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, f"todo {todo_id}")
