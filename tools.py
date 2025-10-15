@@ -59,6 +59,7 @@ async def get_tasks(
     project_id: str = None,
     page_number: int = None,
     page_size: int = None,
+    sort: str = "-last_activity_at",
     extra_filters: dict = None
 ) -> ToolResult:
     """Get tasks with optional filtering and pagination.
@@ -68,6 +69,8 @@ async def get_tasks(
         project_id: Optional Productive project ID to filter tasks by
         page_number: Optional page number for pagination
         page_size: Optional page size for pagination
+        sort: Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date')
+              Defaults to '-last_activity_at' (most recent activity first). Use '-' prefix for descending order.
         extra_filters: Optional dict of additional filter query params using Productive syntax
                        (e.g. {'filter[status][eq]': 'open'})
 
@@ -83,6 +86,8 @@ async def get_tasks(
             params["page[size]"] = page_size
         if project_id is not None:
             params["filter[project_id][eq]"] = project_id
+        if sort:
+            params["sort"] = sort
         if extra_filters:
             params.update(extra_filters)
 
@@ -97,12 +102,7 @@ async def get_tasks(
 
         return ToolResult(
             content=[summary],
-            structured_content={
-                "data": filtered,
-                "metadata": {
-                    "endpoint": "productive.get_tasks",
-                }
-            }
+            structured_content=filtered
         )
 
     except ProductiveAPIError as e:
@@ -136,7 +136,7 @@ async def get_task(task_id: str, ctx: Context) -> ToolResult:
         
         return ToolResult(
             content=[summary],
-            structured_content=filtered
+            structured_content=filtered,
         )
         
     except ProductiveAPIError as e:
@@ -168,7 +168,7 @@ async def get_comments(ctx: Context) -> ToolResult:
         
         return ToolResult(
             content=[summary],
-            structured_content=filtered
+            structured_content=filtered,
         )
         
     except ProductiveAPIError as e:

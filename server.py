@@ -45,6 +45,7 @@ async def get_tasks(
     project_id: Annotated[str, Field(description="Productive project ID to filter tasks by")] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
     page_size: Annotated[int, Field(description="Number of tasks per page (max 200)")] = None,
+    sort: Annotated[str, Field(description="Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date'). Use '-' prefix for descending order. Defaults to '-last_activity_at' (most recent first).")] = "-last_activity_at",
     extra_filters: Annotated[dict, Field(description="Additional Productive query filters (e.g. {'filter[status][eq]': 'open'})")] = None
 ) -> Dict[str, Any]:
     """Get tasks with optional filtering and pagination.
@@ -52,6 +53,7 @@ async def get_tasks(
     Supports Productive's native query-language:
       - Pagination: page_number, page_size
       - Filtering: project_id, or any extra_filters dict
+      - Sorting: sort parameter (defaults to most recent activity first)
       - All params are optional; omit to fetch all tasks.
 
     Returns:
@@ -62,6 +64,7 @@ async def get_tasks(
         project_id=project_id,
         page_number=page_number,
         page_size=page_size,
+        sort=sort,
         extra_filters=extra_filters
     )
 
