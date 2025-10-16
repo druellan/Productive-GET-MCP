@@ -85,7 +85,10 @@ async def get_tasks(
     )
 
 @mcp.tool
-async def get_task(task_id: int, ctx: Context) -> Dict[str, Any]:
+async def get_task(
+    task_id: Annotated[int, Field(description="Productive task ID")],
+    ctx: Context,
+) -> Dict[str, Any]:
     """Get detailed task information by ID including all related data.
 
     Returns comprehensive task details including:
@@ -141,7 +144,10 @@ async def get_comments(
     )
 
 @mcp.tool
-async def get_comment(comment_id: int, ctx: Context) -> Dict[str, Any]:
+async def get_comment(
+    comment_id: Annotated[int, Field(description="Productive comment ID")],
+    ctx: Context,
+) -> Dict[str, Any]:
     """Get specific comment details with full context and discussion thread.
 
     Returns detailed comment information including:
@@ -183,7 +189,10 @@ async def get_todos(
     )
 
 @mcp.tool
-async def get_todo(todo_id: int, ctx: Context) -> Dict[str, Any]:
+async def get_todo(
+    todo_id: Annotated[int, Field(description="Productive todo ID")],
+    ctx: Context,
+) -> Dict[str, Any]:
     """Get specific todo checklist item details with full task context.
 
     Returns detailed todo information including:
