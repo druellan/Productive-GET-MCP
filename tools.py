@@ -51,7 +51,7 @@ async def get_tasks(
     ctx: Context,
     project_id: int = None,
     page_number: int = None,
-    page_size: int = None,
+    page_size: int = 15,
     sort: str = "-last_activity_at",
     extra_filters: dict = None
 ) -> ToolResult:
@@ -61,7 +61,7 @@ async def get_tasks(
         ctx: MCP context for logging and error handling
         project_id: Optional Productive project ID to filter tasks by
         page_number: Optional page number for pagination
-        page_size: Optional page size for pagination
+        page_size: Page size for pagination (default 15, max 200)
         sort: Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date')
               Defaults to '-last_activity_at' (most recent activity first). Use '-' prefix for descending order.
         extra_filters: Optional dict of additional filter query params using Productive syntax
@@ -129,8 +129,8 @@ async def get_comments(
     project_id: int = None,
     task_id: int = None,
     page_number: int = None,
-    page_size: int = None,
-    extra_filters: dict = None,
+    page_size: int = 15,
+    extra_filters: dict = None
 ) -> ToolResult:
     """Get all comments across projects and tasks with full context.
 
@@ -139,7 +139,7 @@ async def get_comments(
         project_id: Optional Productive project ID to filter comments by
         task_id: Optional Productive task ID to filter comments by
         page_number: Optional page number for pagination
-        page_size: Optional page size for pagination
+        page_size: Page size for pagination (default 15, max 200)
         extra_filters: Optional dict of additional filter query params using Productive syntax
                        (e.g. {'filter[discussion_id]': '123', 'filter[page_id][]': ['1', '2']})
 
@@ -204,7 +204,7 @@ async def get_todos(
     ctx: Context,
     task_id: int = None,
     page_number: int = None,
-    page_size: int = None,
+    page_size: int = 15,
     extra_filters: dict = None
 ) -> ToolResult:
     """Get all todo checklist items across all tasks and projects.
@@ -213,7 +213,7 @@ async def get_todos(
         ctx: MCP context for logging and error handling
         task_id: Optional task ID (string) to filter todos by
         page_number: Optional page number for pagination
-        page_size: Optional page size (max 200)
+        page_size: Page size for pagination (default 15, max 200)
         extra_filters: Optional dict of additional Productive API filters
         
     Returns:

@@ -49,8 +49,8 @@ async def get_tasks(
         int, Field(description="Page number for pagination")
     ] = None,
     page_size: Annotated[
-        int, Field(description="Number of tasks per page (max 200)")
-    ] = None,
+        int, Field(description="Number of tasks per page (default 15, max 200)")
+    ] = 15,
     sort: Annotated[
         str,
         Field(
@@ -60,14 +60,14 @@ async def get_tasks(
     extra_filters: Annotated[
         dict,
         Field(
-            description="Additional Productive query filters (e.g. {'filter[status][eq]': 'open'})"
+            description="Additional Productive query filters using API syntax. Common filters: filter[status][eq] ('open'), filter[project_id][eq] (ID), filter[assignee_id][eq] (ID), filter[due_date][gte] (date)."
         ),
     ] = None,
 ) -> Dict[str, Any]:
     """Get tasks with optional filtering and pagination.
 
     Supports Productive's native query-language:
-      - Pagination: page_number, page_size
+      - Pagination: page_number, page_size (default 15)
       - Filtering: project_id, or any extra_filters dict
       - Sorting: sort parameter (defaults to most recent activity first)
       - All params are optional; omit to fetch all tasks.
@@ -116,12 +116,12 @@ async def get_comments(
     ] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
     page_size: Annotated[
-        int, Field(description="Number of comments per page (max 200)")
-    ] = None,
+        int, Field(description="Number of comments per page (default 15, max 200)")
+    ] = 15,
     extra_filters: Annotated[
         dict,
         Field(
-            description="Additional Productive query filters (e.g. {'filter[discussion_id]': '123'})"
+            description="Additional Productive query filters using API syntax. Common filters: filter[project_id][eq] (ID), filter[task_id][eq] (ID), filter[discussion_id][eq] (ID)."
         ),
     ] = None,
 ) -> Dict[str, Any]:
@@ -168,8 +168,8 @@ async def get_todos(
     ctx: Context,
     task_id: Annotated[int, Field(description="Productive task ID to filter todos by")] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
-    page_size: Annotated[int, Field(description="Number of todos per page (max 200)")] = None,
-    extra_filters: Annotated[dict, Field(description="Additional Productive query filters (e.g. {'filter[status]': '1'})")] = None
+    page_size: Annotated[int, Field(description="Number of todos per page (default 15, max 200)")] = 15,
+    extra_filters: Annotated[dict, Field(description="Additional Productive query filters using API syntax. Common filters: filter[task_id][eq] (ID), filter[status][eq] (0/1), filter[assignee_id][eq] (ID).")] = None
 ) -> Dict[str, Any]:
     """Get all todo checklist items across all tasks and projects.
 
