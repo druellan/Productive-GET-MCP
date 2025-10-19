@@ -51,7 +51,7 @@ async def get_tasks(
     ctx: Context,
     project_id: int = None,
     page_number: int = None,
-    page_size: int = 15,
+    page_size: int = 20,
     sort: str = "-last_activity_at",
     extra_filters: dict = None
 ) -> ToolResult:
@@ -61,7 +61,7 @@ async def get_tasks(
         ctx: MCP context for logging and error handling
         project_id: Optional Productive project ID to filter tasks by
         page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 15, max 200)
+        page_size: Page size for pagination (default 20, max 200)
         sort: Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date')
               Defaults to '-last_activity_at' (most recent activity first). Use '-' prefix for descending order.
         extra_filters: Optional dict of additional filter query params using Productive syntax
@@ -75,8 +75,11 @@ async def get_tasks(
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
+        # Always apply default page_size to ensure consistent pagination
         if page_size is not None:
             params["page[size]"] = page_size
+        else:
+            params["page[size]"] = 20
         if project_id is not None:
             params["filter[project_id][eq]"] = project_id
         if sort:
@@ -129,7 +132,7 @@ async def get_comments(
     project_id: int = None,
     task_id: int = None,
     page_number: int = None,
-    page_size: int = 15,
+    page_size: int = 20,
     extra_filters: dict = None
 ) -> ToolResult:
     """Get all comments across projects and tasks with full context.
@@ -139,7 +142,7 @@ async def get_comments(
         project_id: Optional Productive project ID to filter comments by
         task_id: Optional Productive task ID to filter comments by
         page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 15, max 200)
+        page_size: Page size for pagination (default 20, max 200)
         extra_filters: Optional dict of additional filter query params using Productive syntax
                        (e.g. {'filter[discussion_id]': '123', 'filter[page_id][]': ['1', '2']})
 
@@ -151,8 +154,11 @@ async def get_comments(
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
+        # Always apply default page_size to ensure consistent pagination
         if page_size is not None:
             params["page[size]"] = page_size
+        else:
+            params["page[size]"] = 20
         if project_id is not None:
             params["filter[project_id][]"] = project_id
         if task_id is not None:
@@ -204,7 +210,7 @@ async def get_todos(
     ctx: Context,
     task_id: int = None,
     page_number: int = None,
-    page_size: int = 15,
+    page_size: int = 20,
     extra_filters: dict = None
 ) -> ToolResult:
     """Get all todo checklist items across all tasks and projects.
@@ -224,8 +230,11 @@ async def get_todos(
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
+        # Always apply default page_size to ensure consistent pagination
         if page_size is not None:
             params["page[size]"] = page_size
+        else:
+            params["page[size]"] = 20
         if task_id is not None:
             params["filter[task_id]"] = [task_id]
         if extra_filters:
