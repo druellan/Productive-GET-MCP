@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
     "fastmcp>=2.12.3",
     "httpx>=0.28.1",
+    "bleach>=6.0.0",
 ]
 
 [project.urls]
