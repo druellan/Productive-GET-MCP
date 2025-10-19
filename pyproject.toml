@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "Productive MCP", email = "productive@example.com"}
+    {name = "druellan", email = "druellan@ecimtech.com"}
 ]
 keywords = ["productive", "mcp", "tasks", "comments", "todos"]
 classifiers = [
@@ -24,12 +24,8 @@ dependencies = [
     "bleach>=6.0.0",
 ]
 
-[project.urls]
-Homepage = "https://example.com/"
-
 [project.scripts]
 productive = "server:main"
-productive-client = "productive_client:main"
 
 [tool.setuptools]
 package-dir = {"" = "."}
