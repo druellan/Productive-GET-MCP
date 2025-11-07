@@ -154,11 +154,13 @@ All tools return filtered JSON optimized for LLM processing:
 - Empty/null values removed
 - Pagination links removed
 - List views use lightweight output (e.g., `get_project_tasks` excludes descriptions and relationships)
+- **Web app URLs included**: Each resource includes a `webapp_url` field linking directly to the Productive web interface
 
 **Response Structure:**
 - `data`: Main resource data (array for collections, object for single items)
 - `meta`: Pagination and metadata
 - `included`: Related resource data (when applicable)
+- `webapp_url`: Direct link to view the resource in Productive (e.g., `https://app.productive.io/12345/tasks/67890`)
 
 Example JSON output for projects:
 ```json

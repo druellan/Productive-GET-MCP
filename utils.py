@@ -1,5 +1,21 @@
 from typing import Any, Dict
 import bleach
+from config import config
+
+
+def get_webapp_url(resource_type: str, resource_id: str) -> str:
+    """Generate Productive web app URL for a resource.
+    
+    Args:
+        resource_type: Type of resource ('projects', 'tasks', etc.)
+        resource_id: The resource ID
+        
+    Returns:
+        URL to view the resource in Productive web app
+    """
+    org_id = config.organization
+    # Productive URLs follow pattern: https://app.productive.io/{org-id}/[resource-type]/{id}
+    return f"https://app.productive.io/{org_id}/{resource_type}/{resource_id}"
 
 def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, Any]:
     """Filter out unwanted attributes and strip HTML from specific fields based on object type."""
@@ -124,8 +140,38 @@ def _clean_meta_object(meta: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def filter_response(response: Dict[str, Any]) -> Dict[str, Any]:
-    """Filter Productive API response: remove sensitive fields and clean empty values."""
-    return remove_null_and_empty(response)
+    """Filter Productive API response: remove sensitive fields and clean empty values.
+    
+    Also adds webapp_url to resources for easy access to the Productive web interface.
+    """
+    filtered = remove_null_and_empty(response)
+    
+    # Add webapp URLs to single resource responses
+    if isinstance(filtered, dict) and "data" in filtered:
+        if isinstance(filtered["data"], dict):
+            # Single resource
+            _add_webapp_url(filtered["data"])
+        elif isinstance(filtered["data"], list):
+            # Multiple resources
+            for item in filtered["data"]:
+                _add_webapp_url(item)
+    
+    return filtered
+
+
+def _add_webapp_url(item: Dict[str, Any]) -> None:
+    """Add webapp_url to a resource item in-place.
+    
+    Modifies the item dict to include a webapp_url field for easy access.
+    """
+    if not isinstance(item, dict):
+        return
+    
+    resource_type = item.get("type")
+    resource_id = item.get("id")
+    
+    if resource_type and resource_id:
+        item["webapp_url"] = get_webapp_url(resource_type, resource_id)
 
 
 def filter_task_list_response(response: Dict[str, Any]) -> Dict[str, Any]:
@@ -137,6 +183,7 @@ def filter_task_list_response(response: Dict[str, Any]) -> Dict[str, Any]:
     - non-essential metadata
     
     Keeps only what's needed to identify and select tasks.
+    Also adds webapp_url for easy access.
     """
     if not isinstance(response, dict):
         return response
@@ -157,9 +204,9 @@ def filter_task_list_response(response: Dict[str, Any]) -> Dict[str, Any]:
                 if "attributes" in item:
                     filtered_item["attributes"] = _filter_task_list_attributes(item["attributes"])
                 
-                # Explicitly skip relationships for list view
-                # (relationships add noise when browsing multiple tasks)
-                
+                # Add webapp URL for easy access
+                _add_webapp_url(filtered_item)
+
                 filtered_data.append(filtered_item)
             else:
                 filtered_data.append(item)
