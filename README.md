@@ -7,13 +7,15 @@ This implementation is tailored for read-only operations, providing streamlined 
 ## Features
 
 - **Get Projects**: Retrieve all projects
-- **Get Tasks**: Retrieve all tasks
-- **Get Task by ID**: Retrieve a specific task
-- **Get Comments**: Retrieve all comments
-- **Get Comment by ID**: Retrieve a specific comment
-- **Get Todos**: Retrieve all todos
-- **Get Todo by ID**: Retrieve a specific todo
-- **Filtered JSON Output**: All responses are filtered to minimize output
+- **Get Tasks**: Retrieve tasks with filtering and pagination
+- **Get Task**: Retrieve a specific task by internal ID
+- **Get Project Tasks**: Retrieve all tasks for a specific project
+- **Get Project Task**: Retrieve a task by its number (e.g., #960)
+- **Get Comments**: Retrieve comments with filtering
+- **Get Comment**: Retrieve a specific comment by ID
+- **Get Todos**: Retrieve todo items with filtering
+- **Get Todo**: Retrieve a specific todo by ID
+- **LLM-Optimized Responses**: Filtered output removes noise, strips HTML, and reduces token consumption
 
 ## Requirements
 
@@ -87,15 +89,29 @@ Retrieve tasks with optional filtering and pagination.
 **Properties:**
 - `project_id` (int, optional): Filter tasks by Productive project ID
 - `page_number` (int, optional): Page number for pagination
-- `page_size` (int, optional): Page size for pagination
+- `page_size` (int, optional): Page size for pagination (default: 20)
 - `sort` (str, optional): Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date')
 - `extra_filters` (dict, optional): Additional Productive API filters (e.g., `{'filter[status][eq]': 'open'}`)
 
 ### `get_task`
-Retrieve a specific task by ID.
+Retrieve a specific task by its internal ID. Returns full task details.
 
 **Properties:**
-- `task_id` (int): The unique Productive task identifier
+- `task_id` (int): The unique Productive task identifier (internal ID, e.g., 14677418)
+
+### `get_project_tasks`
+Get all tasks for a specific project. Optimized for browsing with lightweight output (no descriptions or relationships).
+
+**Properties:**
+- `project_id` (int): The project ID to get tasks for
+- `status` (str, optional): Filter by task status ('open' or 'closed')
+
+### `get_project_task`
+Get a task by its  number within a project (e.g., task #960). Returns full task details.
+
+**Properties:**
+- `task_number` (str): The task number (e.g., "960")
+- `project_id` (int): The project ID containing the task
 
 ### `get_comments`
 Retrieve comments with optional filtering and pagination.
@@ -130,12 +146,19 @@ Retrieve a specific todo checklist item by ID.
 
 ## Output Format
 
-All tools return data in filtered JSON format for improved readability and LLM processing.
-The output is filtered to remove empty, null or redundant information.
+All tools return filtered JSON optimized for LLM processing:
 
-- `data`: Contains the main resource data (array for collections, object for single items)
-- `meta`: Contains pagination and metadata information
-- `included`: Contains related resource data (when relationships are included)
+**LLM Optimizations:**
+- Unwanted fields removed (e.g., `creation_method_id`, `email_key`, `placement` from tasks)
+- HTML stripped from descriptions and comments
+- Empty/null values removed
+- Pagination links removed
+- List views use lightweight output (e.g., `get_project_tasks` excludes descriptions and relationships)
+
+**Response Structure:**
+- `data`: Main resource data (array for collections, object for single items)
+- `meta`: Pagination and metadata
+- `included`: Related resource data (when applicable)
 
 Example JSON output for projects:
 ```json

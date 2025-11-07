@@ -86,10 +86,15 @@ async def get_tasks(
 
 @mcp.tool
 async def get_task(
-    task_id: Annotated[int, Field(description="Productive task ID")],
     ctx: Context,
+    task_id: Annotated[
+        int, Field(description="The unique Productive task identifier (internal ID)")
+    ],
 ) -> Dict[str, Any]:
-    """Get detailed task information by ID including all related data.
+    """Get detailed task information by its internal ID.
+    
+    Use this when you have the internal task ID (e.g., 14677418).
+    For looking up tasks by their project-specific number (e.g., #960), use get_project_task instead.
 
     Returns comprehensive task details including:
     - Task description, priority, and current status
@@ -98,12 +103,73 @@ async def get_task(
     - Time tracking: estimated vs actual hours
     - All comments and discussion history
     - Attached files and checklist items (todos)
-    - Due dates, start dates, and completion timeline
-
-    Args:
-        task_id: Productive task ID
     """
-    return await tools.get_task(task_id, ctx)
+    return await tools.get_task(task_id=task_id, ctx=ctx)
+
+
+@mcp.tool
+async def get_project_tasks(
+    ctx: Context,
+    project_id: Annotated[
+        int, Field(description="The project ID to get tasks for")
+    ],
+    status: Annotated[
+        str, Field(description="Optional filter by task status ('open' or 'closed')")
+    ] = None,
+) -> Dict[str, Any]:
+    """Get all tasks for a specific project.
+    
+    This is optimized for getting a comprehensive view of all tasks in a project.
+
+    Returns a list of all tasks in the project with details including:
+    - Task title, number, and status
+    - Assignee information
+    - Due dates and priority
+    - Task descriptions
+    - Related project context
+    
+    Example:
+        To get all open tasks in project 343136:
+        get_project_tasks(project_id=343136, status="open")
+    """
+    return await tools.get_project_tasks(
+        ctx=ctx,
+        project_id=project_id,
+        status=status
+    )
+
+
+@mcp.tool
+async def get_project_task(
+    ctx: Context,
+    task_number: Annotated[
+        str, Field(description="The human-readable task number without # (e.g., '960')")
+    ],
+    project_id: Annotated[
+        int, Field(description="The project ID containing the task")
+    ],
+) -> Dict[str, Any]:
+    """Get a task by its human-readable number within a specific project.
+    
+    This is the preferred way to fetch tasks when you know the task number (e.g., #960)
+    that appears in the UI, rather than the internal database ID.
+
+    Task numbers are project-specific, so you must provide both the task_number and project_id.
+    For example, task #960 in project 343136.
+
+    Returns comprehensive task details including:
+    - Task description, priority, and current status
+    - Assigned team member with role and hourly rate
+    - Parent project with budget and client details
+    - Time tracking: estimated vs actual hours
+    - All comments and discussion history
+    - Attached files and checklist items (todos)
+    """
+    return await tools.get_project_task(
+        ctx=ctx,
+        task_number=task_number,
+        project_id=project_id
+    )
 
 @mcp.tool
 async def get_comments(

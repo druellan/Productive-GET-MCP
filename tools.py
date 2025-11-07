@@ -2,7 +2,7 @@ from fastmcp import Context
 from fastmcp.tools.tool import ToolResult
 
 from productive_client import client, ProductiveAPIError
-from utils import filter_response
+from utils import filter_response, filter_task_list_response
 
 
 async def _handle_productive_api_error(ctx: Context, e: ProductiveAPIError, resource_type: str = "data") -> None:
@@ -105,7 +105,7 @@ async def get_task(task_id: int, ctx: Context) -> ToolResult:
     """Get detailed task information by ID including all related data.
     
     Args:
-        task_id: The unique Productive task identifier
+        task_id: The unique Productive task identifier (internal ID)
         ctx: MCP context for logging and error handling
         
     Returns:
@@ -122,6 +122,110 @@ async def get_task(task_id: int, ctx: Context) -> ToolResult:
         
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, f"task {task_id}")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching task: {str(e)}")
+        raise e
+
+
+async def get_project_tasks(
+    ctx: Context,
+    project_id: int,
+    status: str = None
+) -> ToolResult:
+    """Get all tasks for a specific project.
+    
+    This is optimized for getting a comprehensive view of all tasks in a project.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        project_id: The project ID to get tasks for
+        status: Optional filter by task status ('open' or 'closed')
+        
+    Returns:
+        Dictionary containing all tasks for the project with full details
+        
+    Example:
+        get_project_tasks(project_id=343136, status="open")
+    """
+    try:
+        await ctx.info(f"Fetching all tasks for project {project_id}")
+        
+        # Get all tasks for the project with a high limit
+        params = {
+            "filter[project_id][eq]": project_id,
+            "page[size]": 200  # Maximum to get comprehensive view
+        }
+        
+        if status:
+            params["filter[status][eq]"] = status
+        
+        result = await client.get_tasks(params=params)
+        
+        if not result.get("data") or len(result["data"]) == 0:
+            await ctx.info(f"No tasks found for project {project_id}")
+            return {"data": [], "meta": {"message": f"No tasks found for project {project_id}"}}
+        
+        # Use lighter filtering for task lists - removes descriptions and relationships
+        filtered = filter_task_list_response(result)
+        await ctx.info(f"Successfully retrieved {len(result['data'])} tasks for project {project_id}")
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, f"tasks for project {project_id}")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching tasks: {str(e)}")
+        raise e
+
+
+async def get_project_task(
+    ctx: Context,
+    task_number: str,
+    project_id: int
+) -> ToolResult:
+    """Get a task by its human-readable task number within a specific project.
+    
+    This is the preferred way to fetch tasks when you know the task number (e.g., #960)
+    rather than the internal ID. Task numbers are project-specific.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        task_number: The human-readable task number (e.g., "960")
+        project_id: The project ID containing the task
+        
+    Returns:
+        Dictionary with complete task details and project context
+        
+    Example:
+        get_project_task(task_number="960", project_id=343136)
+    """
+    try:
+        await ctx.info(f"Fetching task #{task_number} from project {project_id}")
+        
+        # Get tasks for the project filtered by task_number
+        params = {
+            "filter[project_id][eq]": project_id,
+            "filter[task_number][eq]": task_number,
+            "page[size]": 1
+        }
+        
+        result = await client.get_tasks(params=params)
+        
+        if not result.get("data") or len(result["data"]) == 0:
+            raise ProductiveAPIError(
+                message=f"Task #{task_number} not found in project {project_id}",
+                status_code=404
+            )
+        
+        # Return the first (and should be only) task
+        task_data = result["data"][0]
+        filtered = filter_response({"data": task_data})
+        await ctx.info(f"Successfully retrieved task #{task_number}")
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, f"task #{task_number}")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching task: {str(e)}")
         raise e

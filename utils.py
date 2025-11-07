@@ -30,6 +30,34 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
     
     return filtered
 
+
+def _filter_task_list_attributes(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """Filter task attributes for list views - keep only essential fields for browsing.
+    
+    When listing multiple tasks, we want just enough info to identify and select tasks,
+    without overwhelming the LLM with descriptions and metadata.
+    """
+    # Keep only these essential fields
+    essential_fields = [
+        'title',
+        'number',
+        'task_number',
+        'closed',
+        'created_at',
+        'updated_at',
+        'last_activity_at',
+        'initial_estimate',
+        'remaining_time',
+        'worked_time',
+        'billable_time',
+        'closed_at',
+        'type_id',
+        'private'
+    ]
+    
+    filtered = {k: v for k, v in attributes.items() if k in essential_fields}
+    return filtered
+
 def remove_null_and_empty(obj: Any) -> Any:
     """Recursively remove null, empty dicts/lists, and empty strings from a dict/list.
 
@@ -98,3 +126,49 @@ def _clean_meta_object(meta: Dict[str, Any]) -> Dict[str, Any]:
 def filter_response(response: Dict[str, Any]) -> Dict[str, Any]:
     """Filter Productive API response: remove sensitive fields and clean empty values."""
     return remove_null_and_empty(response)
+
+
+def filter_task_list_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """Filter task list responses to show only essential fields for browsing.
+    
+    Removes:
+    - descriptions (can be very long)
+    - relationships (not needed for list view)
+    - non-essential metadata
+    
+    Keeps only what's needed to identify and select tasks.
+    """
+    if not isinstance(response, dict):
+        return response
+    
+    filtered = {}
+    
+    # Process data array
+    if "data" in response and isinstance(response["data"], list):
+        filtered_data = []
+        for item in response["data"]:
+            if isinstance(item, dict) and item.get("type") == "tasks":
+                filtered_item = {
+                    "id": item.get("id"),
+                    "type": item.get("type"),
+                }
+                
+                # Filter attributes to essential fields only
+                if "attributes" in item:
+                    filtered_item["attributes"] = _filter_task_list_attributes(item["attributes"])
+                
+                # Explicitly skip relationships for list view
+                # (relationships add noise when browsing multiple tasks)
+                
+                filtered_data.append(filtered_item)
+            else:
+                filtered_data.append(item)
+        
+        filtered["data"] = filtered_data
+    
+    # Keep meta if present (has useful info like total_count)
+    if "meta" in response:
+        filtered["meta"] = _clean_meta_object(response["meta"])
+    
+    # Clean up empty values
+    return remove_null_and_empty(filtered)
