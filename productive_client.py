@@ -80,6 +80,10 @@ class ProductiveClient:
         """Get todo by ID"""
         return await self._request("GET", f"/todos/{str(todo_id)}")
 
+    async def get_activities(self, params: Optional[dict] = None) -> Dict[str, Any]:
+        """Get activities with optional filtering"""
+        return await self._request("GET", "/activities", params=params)
+
     async def close(self):
         """Close HTTP client"""
         await self.client.aclose()

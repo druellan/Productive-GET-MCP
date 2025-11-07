@@ -274,5 +274,37 @@ async def get_todo(
     """
     return await tools.get_todo(todo_id, ctx)
 
+@mcp.tool
+async def get_recent_updates(
+    ctx: Context,
+    hours: Annotated[
+        int, Field(description="Number of hours to look back (default: 24, use 168 for a week)")
+    ] = 24,
+    user_id: Annotated[
+        int, Field(description="Optional: Filter by specific user/person ID")
+    ] = None,
+    project_id: Annotated[
+        int, Field(description="Optional: Filter by specific project ID")
+    ] = None,
+) -> Dict[str, Any]:
+    """Get a summarized feed of recent activities and updates.
+    
+    Perfect for status updates and answering questions like:
+    - "What happened today?"
+    - "What did the team work on this week?"
+    - "Show me recent updates on project X"
+    - "What did John do yesterday?"
+    
+    Returns recent changes, task updates, comments, and activities in chronological order.
+    Much more efficient than manually filtering activities - gives you exactly what you need.
+    
+    Examples:
+        get_recent_updates()  # Last 24 hours, all activity
+        get_recent_updates(hours=168)  # Last week
+        get_recent_updates(hours=48, project_id=343136)  # Last 2 days on specific project
+        get_recent_updates(hours=24, user_id=12345)  # What a specific user did today
+    """
+    return await tools.get_recent_updates(ctx, hours, user_id, project_id)
+
 if __name__ == "__main__":
     mcp.run()

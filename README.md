@@ -9,8 +9,9 @@ This implementation is tailored for read-only operations, providing streamlined 
 - **Get Projects**: Retrieve all projects
 - **Get Tasks**: Retrieve tasks with filtering and pagination
 - **Get Task**: Retrieve a specific task by internal ID
-- **Get Project Tasks**: Retrieve all tasks for a specific project
+- **Get Project Tasks**: Retrieve all tasks for a specific project (lightweight)
 - **Get Project Task**: Retrieve a task by its number (e.g., #960)
+- **Get Recent Updates**: Summarized activity feed for status updates
 - **Get Comments**: Retrieve comments with filtering
 - **Get Comment**: Retrieve a specific comment by ID
 - **Get Todos**: Retrieve todo items with filtering
@@ -128,6 +129,15 @@ Retrieve a specific comment by ID.
 
 **Properties:**
 - `comment_id` (int): The unique Productive comment identifier
+
+### `get_recent_updates`
+Get a summarized feed of recent activities and updates. Perfect for status updates.
+
+**Properties:**
+- `hours` (int, optional): Number of hours to look back (default: 24, use 168 for a week)
+- `user_id` (int, optional): Filter by specific user/person ID
+- `project_id` (int, optional): Filter by specific project ID
+
 
 ### `get_todos`
 Retrieve todo checklist items with optional filtering and pagination.

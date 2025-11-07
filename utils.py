@@ -83,6 +83,7 @@ def remove_null_and_empty(obj: Any) -> Any:
     - Remove pagination links
     - Remove empty meta dicts and empty parent objects after cleanup
     - Filter out unwanted task attributes
+    - Remove organization relationships (redundant)
     """
     if isinstance(obj, dict):
         result = {}
@@ -91,6 +92,10 @@ def remove_null_and_empty(obj: Any) -> Any:
             # Skip pagination links - not useful for LLMs
             if key == "links":
                 continue
+            
+            # Skip organization relationships - redundant
+            if key == "relationships" and isinstance(value, dict):
+                value = {k: v for k, v in value.items() if k != "organization"}
                 
             cleaned_value = remove_null_and_empty(value)
             

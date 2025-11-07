@@ -382,3 +382,71 @@ async def get_todo(todo_id: int, ctx: Context) -> ToolResult:
     except Exception as e:
         await ctx.error(f"Unexpected error fetching todo: {str(e)}")
         raise e
+
+
+async def get_recent_updates(
+    ctx: Context,
+    hours: int = 24,
+    user_id: int = None,
+    project_id: int = None
+) -> ToolResult:
+    """Get a summarized feed of recent activities and updates.
+    
+    Perfect for answering questions like "What happened today?" or "What did the team work on?"
+    Returns recent changes, updates, and activities in an easy-to-read format.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        hours: Number of hours to look back (default: 24, e.g., 168 for a week)
+        user_id: Optional filter by specific user/person ID
+        project_id: Optional filter by specific project ID
+        
+    Returns:
+        Dictionary containing recent activities with timestamps and context
+        
+    Example:
+        get_recent_updates(hours=48, project_id=343136)  # Last 2 days on specific project
+    """
+    try:
+        from datetime import datetime, timedelta
+        
+        # Calculate the cutoff time
+        cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+        after_date = cutoff_time.isoformat() + "Z"
+        
+        await ctx.info(f"Fetching activities from the last {hours} hours")
+        
+        # Build filter params
+        params = {
+            "filter[after]": after_date,
+            "page[size]": 100  # Get more activities for summary
+        }
+        
+        if user_id:
+            params["filter[person_id]"] = user_id
+            
+        if project_id:
+            params["filter[project_id]"] = project_id
+        
+        result = await client.get_activities(params=params)
+        
+        if not result.get("data") or len(result["data"]) == 0:
+            await ctx.info("No recent activities found")
+            return {
+                "data": [],
+                "meta": {
+                    "message": f"No activities found in the last {hours} hours",
+                    "hours": hours
+                }
+            }
+        
+        filtered = filter_response(result)
+        await ctx.info(f"Successfully retrieved {len(result['data'])} recent activities")
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, "activities")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching recent updates: {str(e)}")
+        raise e
