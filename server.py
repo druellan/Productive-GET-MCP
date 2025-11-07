@@ -60,7 +60,7 @@ async def get_tasks(
     extra_filters: Annotated[
         dict,
         Field(
-            description="Additional Productive query filters using API syntax. Common filters: filter[status][eq] ('open'), filter[project_id][eq] (ID), filter[assignee_id][eq] (ID), filter[due_date][gte] (date)."
+            description="Additional Productive query filters using API syntax. Common filters: filter[status][eq] (1: open, 2: closed), filter[project_id][eq] (ID), filter[assignee_id][eq] (ID), filter[due_date][gte] (date)."
         ),
     ] = None,
 ) -> Dict[str, Any]:
@@ -114,7 +114,7 @@ async def get_project_tasks(
         int, Field(description="The project ID to get tasks for")
     ],
     status: Annotated[
-        str, Field(description="Optional filter by task status ('open' or 'closed')")
+        int, Field(description="Optional filter by task status: 1 = open, 2 = closed")
     ] = None,
 ) -> Dict[str, Any]:
     """Get all tasks for a specific project.
@@ -130,7 +130,7 @@ async def get_project_tasks(
     
     Example:
         To get all open tasks in project 343136:
-        get_project_tasks(project_id=343136, status="open")
+        get_project_tasks(project_id=343136, status=1)
     """
     return await tools.get_project_tasks(
         ctx=ctx,
@@ -143,13 +143,13 @@ async def get_project_tasks(
 async def get_project_task(
     ctx: Context,
     task_number: Annotated[
-        str, Field(description="The human-readable task number without # (e.g., '960')")
+        str, Field(description="The task number without # (e.g., '960')")
     ],
     project_id: Annotated[
         int, Field(description="The project ID containing the task")
     ],
 ) -> Dict[str, Any]:
-    """Get a task by its human-readable number within a specific project.
+    """Get a task by its number within a specific project.
     
     This is the preferred way to fetch tasks when you know the task number (e.g., #960)
     that appears in the UI, rather than the internal database ID.
@@ -235,7 +235,7 @@ async def get_todos(
     task_id: Annotated[int, Field(description="Productive task ID to filter todos by")] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
     page_size: Annotated[int, Field(description="Number of todos per page (default 20, max 200)")] = 20,
-    extra_filters: Annotated[dict, Field(description="Additional Productive query filters using API syntax. Common filters: filter[task_id][eq] (ID), filter[status][eq] (0/1), filter[assignee_id][eq] (ID).")] = None
+    extra_filters: Annotated[dict, Field(description="Additional Productive query filters using API syntax. Common filters: filter[task_id][eq] (ID), filter[status][eq] (1: open, 2: closed), filter[assignee_id][eq] (ID).")] = None
 ) -> Dict[str, Any]:
     """Get all todo checklist items across all tasks and projects.
 

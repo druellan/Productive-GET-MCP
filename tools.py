@@ -65,7 +65,7 @@ async def get_tasks(
         sort: Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date')
               Defaults to '-last_activity_at' (most recent activity first). Use '-' prefix for descending order.
         extra_filters: Optional dict of additional filter query params using Productive syntax
-                       (e.g. {'filter[status][eq]': 'open'})
+                       (e.g. {'filter[status][eq]': 1} for open tasks, or 2 for closed tasks)
 
     Returns:
         Dictionary containing tasks with assignments, time tracking, and project context
@@ -130,7 +130,7 @@ async def get_task(task_id: int, ctx: Context) -> ToolResult:
 async def get_project_tasks(
     ctx: Context,
     project_id: int,
-    status: str = None
+    status: int = None
 ) -> ToolResult:
     """Get all tasks for a specific project.
     
@@ -139,13 +139,13 @@ async def get_project_tasks(
     Args:
         ctx: MCP context for logging and error handling
         project_id: The project ID to get tasks for
-        status: Optional filter by task status ('open' or 'closed')
+        status: Optional filter by task status (1 = open, 2 = closed)
         
     Returns:
         Dictionary containing all tasks for the project with full details
         
     Example:
-        get_project_tasks(project_id=343136, status="open")
+        get_project_tasks(project_id=343136, status=1)  # Get open tasks
     """
     try:
         await ctx.info(f"Fetching all tasks for project {project_id}")
@@ -156,7 +156,8 @@ async def get_project_tasks(
             "page[size]": 200  # Maximum to get comprehensive view
         }
         
-        if status:
+        # Status filter: 1 = open, 2 = closed (per Productive API docs)
+        if status is not None:
             params["filter[status][eq]"] = status
         
         result = await client.get_tasks(params=params)
@@ -183,14 +184,14 @@ async def get_project_task(
     task_number: str,
     project_id: int
 ) -> ToolResult:
-    """Get a task by its human-readable task number within a specific project.
+    """Get a task by its task number within a specific project.
     
     This is the preferred way to fetch tasks when you know the task number (e.g., #960)
     rather than the internal ID. Task numbers are project-specific.
     
     Args:
         ctx: MCP context for logging and error handling
-        task_number: The human-readable task number (e.g., "960")
+        task_number: The task number (e.g., "960")
         project_id: The project ID containing the task
         
     Returns:
