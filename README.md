@@ -1,6 +1,6 @@
 # Productive.io MCP Server
 
-A Model Context Protocol (MCP) server for accessing Productive.io API endpoints (projects, tasks, comments, todos) via GET operations. Built with [FastMCP](https://gofastmcp.com/).
+A Model Context Protocol (MCP) server for accessing Productive.io API endpoints (projects, tasks, comments, todos, pages, attachments) via GET operations. Built with [FastMCP](https://gofastmcp.com/).
 
 This implementation is tailored for read-only operations, providing streamlined access to essential data while minimizing token consumption. It is optimized for efficiency and simplicity, exposing only the necessary information. For a more comprehensive solution, consider BerwickGeek's implementation: [Productive MCP by BerwickGeek](https://github.com/berwickgeek/productive-mcp).
 
@@ -13,7 +13,9 @@ This implementation is tailored for read-only operations, providing streamlined 
 - **Get Project Task**: Retrieve a task by its number (e.g., #960)
 - **Get Recent Updates**: Summarized activity feed for status updates
 - **Get Comments**: Retrieve comments with filtering
-- **Get Comment**: Retrieve a specific comment by ID
+- **Get Pages**: Retrieve pages/documents with filtering
+- **Get Page**: Retrieve a specific page/document by ID
+- **Get Attachments**: Retrieve attachments/files with filtering
 - **Get Todos**: Retrieve todo items with filtering
 - **Get Todo**: Retrieve a specific todo by ID
 - **LLM-Optimized Responses**: Filtered output removes noise, strips HTML, and reduces token consumption
@@ -95,7 +97,7 @@ Retrieve tasks with optional filtering and pagination.
 - `extra_filters` (dict, optional): Additional Productive API filters (e.g., `{'filter[status][eq]': 'open'}`)
 
 ### `get_task`
-Retrieve a specific task by its internal ID. Returns full task details.
+Retrieve a specific task by its internal ID. Returns task details including title, description, status, dates, time tracking metrics, and todo counts.
 
 **Properties:**
 - `task_id` (int): The unique Productive task identifier (internal ID, e.g., 14677418)
@@ -124,11 +126,28 @@ Retrieve comments with optional filtering and pagination.
 - `page_size` (int, optional): Page size for pagination
 - `extra_filters` (dict, optional): Additional Productive API filters (e.g., `{'filter[discussion_id]': '123'}`)
 
-### `get_comment`
-Retrieve a specific comment by ID.
+### `get_pages`
+Retrieve pages/documents with optional filtering and pagination.
 
 **Properties:**
-- `comment_id` (int): The unique Productive comment identifier
+- `project_id` (int, optional): Filter pages by Productive project ID
+- `creator_id` (int, optional): Filter pages by creator ID
+- `page_number` (int, optional): Page number for pagination
+- `page_size` (int, optional): Page size for pagination
+
+### `get_page`
+Retrieve a specific page/document by ID.
+
+**Properties:**
+- `page_id` (int): The unique Productive page identifier
+
+### `get_attachments`
+Retrieve attachments/files with optional filtering and pagination.
+
+**Properties:**
+- `page_number` (int, optional): Page number for pagination
+- `page_size` (int, optional): Page size for pagination
+- `extra_filters` (dict, optional): Additional Productive API filters
 
 ### `get_recent_updates`
 Get a summarized feed of recent activities and updates. Perfect for status updates.
@@ -137,6 +156,11 @@ Get a summarized feed of recent activities and updates. Perfect for status updat
 - `hours` (int, optional): Number of hours to look back (default: 24, use 168 for a week)
 - `user_id` (int, optional): Filter by specific user/person ID
 - `project_id` (int, optional): Filter by specific project ID
+- `activity_type` (int, optional): Filter by activity type (1: Comment, 2: Changeset, 3: Email)
+- `item_type` (str, optional): Filter by item type (e.g., 'Task', 'Page', 'Deal', 'Workspace')
+- `event_type` (str, optional): Filter by event type (e.g., 'create', 'copy', 'update', 'delete')
+- `task_id` (int, optional): Filter by specific task ID
+- `max_results` (int, optional): Maximum number of activities to return (default: 100, max: 200)
 
 
 ### `get_todos`
