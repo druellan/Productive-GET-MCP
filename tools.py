@@ -451,3 +451,168 @@ async def get_recent_updates(
     except Exception as e:
         await ctx.error(f"Unexpected error fetching recent updates: {str(e)}")
         raise e
+
+
+async def get_pages(
+    ctx: Context,
+    project_id: int = None,
+    creator_id: int = None,
+    page_number: int = None,
+    page_size: int = 20
+) -> ToolResult:
+    """Get all pages/documents with optional filtering.
+    
+    Pages in Productive are documents that can contain rich text content,
+    attachments, and are organized within projects.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        project_id: Optional project ID to filter pages by
+        creator_id: Optional creator ID to filter pages by
+        page_number: Optional page number for pagination
+        page_size: Page size for pagination (default 20, max 200)
+        
+    Returns:
+        Dictionary containing pages with content, metadata, and relationships
+        
+    Example:
+        get_pages(project_id=1234)  # Get all pages for a specific project
+    """
+    try:
+        await ctx.info("Fetching pages")
+        params = {}
+        if page_number is not None:
+            params["page[number]"] = page_number
+        if page_size is not None:
+            params["page[size]"] = page_size
+        else:
+            params["page[size]"] = 20
+        if project_id is not None:
+            params["filter[project_id][]"] = project_id
+        if creator_id is not None:
+            params["filter[creator_id][]"] = creator_id
+
+        result = await client.get_pages(params=params if params else None)
+        await ctx.info("Successfully retrieved pages")
+        
+        filtered = filter_response(result)
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, "pages")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching pages: {str(e)}")
+        raise e
+
+
+async def get_page(page_id: int, ctx: Context) -> ToolResult:
+    """Get specific page/document details with full content.
+    
+    Args:
+        page_id: The unique Productive page identifier
+        ctx: MCP context for logging and error handling
+        
+    Returns:
+        Dictionary with complete page details including JSON-formatted content
+        
+    Note:
+        The page content is stored in JSON format in the 'body' field and may need
+        parsing to extract readable text.
+    """
+    try:
+        await ctx.info(f"Fetching page with ID: {page_id}")
+        result = await client.get_page(page_id)
+        await ctx.info("Successfully retrieved page")
+        
+        filtered = filter_response(result)
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, f"page {page_id}")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching page: {str(e)}")
+        raise e
+
+
+async def get_attachments(
+    ctx: Context,
+    page_number: int = None,
+    page_size: int = 20,
+    extra_filters: dict = None
+) -> ToolResult:
+    """Get all attachments/files with optional filtering.
+    
+    Attachments are files (PDFs, images, documents) that can be associated with
+    various Productive entities like tasks, comments, expenses, etc.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        page_number: Optional page number for pagination
+        page_size: Page size for pagination (default 20, max 200)
+        extra_filters: Optional dict of additional filter query params
+        
+    Returns:
+        Dictionary containing attachment metadata (name, type, size, relationships)
+        Note: This provides metadata only, not actual file content
+        
+    Example:
+        get_attachments()  # Get all attachments
+    """
+    try:
+        await ctx.info("Fetching attachments")
+        params = {}
+        if page_number is not None:
+            params["page[number]"] = page_number
+        if page_size is not None:
+            params["page[size]"] = page_size
+        else:
+            params["page[size]"] = 20
+        if extra_filters:
+            params.update(extra_filters)
+
+        result = await client.get_attachments(params=params if params else None)
+        await ctx.info("Successfully retrieved attachments")
+        
+        filtered = filter_response(result)
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, "attachments")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching attachments: {str(e)}")
+        raise e
+
+
+async def get_attachment(attachment_id: int, ctx: Context) -> ToolResult:
+    """Get specific attachment/file details.
+    
+    Args:
+        attachment_id: The unique Productive attachment identifier
+        ctx: MCP context for logging and error handling
+        
+    Returns:
+        Dictionary with complete attachment metadata including:
+        - File name, type, size
+        - Associated entity (task, comment, etc.)
+        - Upload metadata
+        
+    Note:
+        This provides metadata only, not actual file content
+    """
+    try:
+        await ctx.info(f"Fetching attachment with ID: {attachment_id}")
+        result = await client.get_attachment(attachment_id)
+        await ctx.info("Successfully retrieved attachment")
+        
+        filtered = filter_response(result)
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, f"attachment {attachment_id}")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching attachment: {str(e)}")
+        raise e

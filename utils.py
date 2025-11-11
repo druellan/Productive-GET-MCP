@@ -26,6 +26,8 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'tasks': ['creation_method_id', 'email_key', 'placement'],
         'comments': [],
         'todos': [],
+        'pages': ['preferences', 'cover_image_meta', 'custom_fields'],
+        'attachments': ['attachable_type', 'attachable_id'],
     }
     
     # Fields to strip HTML from per type
@@ -33,6 +35,7 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'tasks': ['description'],
         'comments': ['body'],
         'todos': ['description'],
+        'pages': ['body'],
     }
     
     # Remove unwanted fields

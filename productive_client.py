@@ -1,4 +1,5 @@
 import httpx
+import asyncio
 from typing import Dict, Any, Optional
 from config import config
 
@@ -18,36 +19,60 @@ class ProductiveClient:
             timeout=config.timeout,
             headers=config.headers
         )
+        self.max_retries = 3
+        self.retry_delay = 1.0
+
+    def _parse_error_response(self, response: httpx.Response, default_message: str = "Unknown error") -> tuple[str, str]:
+        """Parse error response and return (message, error_code)"""
+        try:
+            error_data = response.json()
+            message = error_data.get("message", default_message)
+            error_code = error_data.get("errorCode", "UNKNOWN")
+            return message, error_code
+        except Exception:
+            return f"HTTP {response.status_code}: {response.text}", "UNKNOWN"
+
+    def _should_retry(self, status_code: int, attempt: int) -> bool:
+        """Determine if request should be retried based on status code and attempt count"""
+        return attempt < self.max_retries and (status_code == 429 or status_code >= 500)
 
     async def _request(self, method: str, endpoint: str, params: Optional[dict] = None) -> Dict[str, Any]:
-        """Make HTTP request to Productive API"""
+        """Make HTTP request to Productive API with retry logic for transient failures"""
         url = f"{config.base_url}{endpoint}"
         
-        try:
-            response = await self.client.request(method, url, params=params)
-            
-            if response.status_code == 200:
-                return response.json()
-            elif response.status_code == 401:
-                raise ProductiveAPIError("Unauthorized: Invalid API token", 401, "UNAUTHORIZED")
-            elif response.status_code == 404:
-                raise ProductiveAPIError("Resource not found", 404, "NOT_FOUND")
-            elif response.status_code == 429:
-                raise ProductiveAPIError("Rate limit exceeded", 429, "RATE_LIMIT")
-            else:
-                try:
-                    error_data = response.json()
-                    error_message = error_data.get("message", "Unknown error")
-                    error_code = error_data.get("errorCode", "UNKNOWN")
-                    raise ProductiveAPIError(error_message, response.status_code, error_code)
-                except Exception:
-                    raise ProductiveAPIError(
-                        f"HTTP {response.status_code}: {response.text}",
-                        response.status_code
-                    )
-                    
-        except httpx.RequestError as e:
-            raise ProductiveAPIError(f"Request failed: {str(e)}")
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = await self.client.request(method, url, params=params)
+                
+                # Success
+                if response.status_code == 200:
+                    return response.json()
+                
+                # Non-retryable errors
+                if response.status_code == 401:
+                    raise ProductiveAPIError("Unauthorized: Invalid API token", 401, "UNAUTHORIZED")
+                
+                if response.status_code == 404:
+                    raise ProductiveAPIError("Resource not found", 404, "NOT_FOUND")
+                
+                # Retryable errors (429, 5xx)
+                if self._should_retry(response.status_code, attempt):
+                    await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                    continue
+                
+                # Final attempt or non-retryable 4xx error
+                message, error_code = self._parse_error_response(
+                    response,
+                    "Rate limit exceeded" if response.status_code == 429 else "Server error"
+                )
+                raise ProductiveAPIError(message, response.status_code, error_code)
+                        
+            except httpx.RequestError as e:
+                # Retry on network/connection errors
+                if attempt < self.max_retries:
+                    await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                    continue
+                raise ProductiveAPIError(f"Request failed: {str(e)}")
 
     async def get_projects(self) -> Dict[str, Any]:
         """Get all projects"""
@@ -83,6 +108,24 @@ class ProductiveClient:
     async def get_activities(self, params: Optional[dict] = None) -> Dict[str, Any]:
         """Get activities with optional filtering"""
         return await self._request("GET", "/activities", params=params)
+
+    async def get_pages(self, params: Optional[dict] = None) -> Dict[str, Any]:
+        """Get all pages with optional filtering
+        Supports filtering by project_id, creator_id, edited_at, id
+        """
+        return await self._request("GET", "/pages", params=params)
+
+    async def get_page(self, page_id: int) -> Dict[str, Any]:
+        """Get page by ID"""
+        return await self._request("GET", f"/pages/{str(page_id)}")
+
+    async def get_attachments(self, params: Optional[dict] = None) -> Dict[str, Any]:
+        """Get all attachments with optional filtering"""
+        return await self._request("GET", "/attachments", params=params)
+
+    async def get_attachment(self, attachment_id: int) -> Dict[str, Any]:
+        """Get attachment by ID"""
+        return await self._request("GET", f"/attachments/{str(attachment_id)}")
 
     async def close(self):
         """Close HTTP client"""

@@ -306,5 +306,122 @@ async def get_recent_updates(
     """
     return await tools.get_recent_updates(ctx, hours, user_id, project_id)
 
+
+@mcp.tool
+async def get_pages(
+    ctx: Context,
+    project_id: Annotated[
+        int, Field(description="Optional project ID to filter pages by")
+    ] = None,
+    creator_id: Annotated[
+        int, Field(description="Optional creator ID to filter pages by")
+    ] = None,
+    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
+    page_size: Annotated[
+        int, Field(description="Number of pages per page (default 20, max 200)")
+    ] = 20,
+) -> Dict[str, Any]:
+    """Get all pages/documents with optional filtering.
+    
+    Pages in Productive are documents that can contain rich text content,
+    attachments, and are organized within projects.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        project_id: Optional project ID to filter pages by
+        creator_id: Optional creator ID to filter pages by
+        page_number: Optional page number for pagination
+        page_size: Page size for pagination (default 20, max 200)
+        
+    Returns:
+        Dictionary containing pages with content, metadata, and relationships
+        
+    Example:
+        get_pages(project_id=1234)  # Get all pages for a specific project
+    """
+    return await tools.get_pages(
+        ctx,
+        project_id=project_id,
+        creator_id=creator_id,
+        page_number=page_number,
+        page_size=page_size
+    )
+
+
+@mcp.tool
+async def get_page(
+    page_id: Annotated[int, Field(description="The unique Productive page identifier")],
+    ctx: Context,
+) -> Dict[str, Any]:
+    """Get specific page/document details with full content.
+    
+    Args:
+        page_id: The unique Productive page identifier
+        ctx: MCP context for logging and error handling
+        
+    Returns:
+        Dictionary with complete page details including JSON-formatted content
+    """
+    return await tools.get_page(page_id, ctx)
+
+
+@mcp.tool
+async def get_attachments(
+    ctx: Context,
+    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
+    page_size: Annotated[
+        int, Field(description="Number of attachments per page (default 20, max 200)")
+    ] = 20,
+    extra_filters: Annotated[
+        dict,
+        Field(description="Additional Productive query filters using API syntax")
+    ] = None,
+) -> Dict[str, Any]:
+    """Get all attachments/files with optional filtering.
+    
+    Attachments are files (PDFs, images, documents) that can be associated with
+    various Productive entities like tasks, comments, expenses, etc.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        page_number: Optional page number for pagination
+        page_size: Page size for pagination (default 20, max 200)
+        extra_filters: Optional dict of additional filter query params
+        
+    Returns:
+        Dictionary containing attachment metadata (name, type, size, relationships)
+        Note: This provides metadata only, not actual file content
+    """
+    return await tools.get_attachments(
+        ctx,
+        page_number=page_number,
+        page_size=page_size,
+        extra_filters=extra_filters
+    )
+
+
+@mcp.tool
+async def get_attachment(
+    attachment_id: Annotated[int, Field(description="The unique Productive attachment identifier")],
+    ctx: Context,
+) -> Dict[str, Any]:
+    """Get specific attachment/file details.
+    
+    Args:
+        attachment_id: The unique Productive attachment identifier
+        ctx: MCP context for logging and error handling
+        
+    Returns:
+        Dictionary with complete attachment metadata including:
+        - File name, type, size
+        - Associated entity (task, comment, etc.)
+        - Upload metadata
+        
+    Note:
+        This provides metadata only, not actual file content
+    """
+    return await tools.get_attachment(attachment_id, ctx)
+
+
 if __name__ == "__main__":
     mcp.run()
