@@ -209,25 +209,25 @@ async def get_comments(
         extra_filters=extra_filters
     )
 
-@mcp.tool
-async def get_comment(
-    comment_id: Annotated[int, Field(description="Productive comment ID")],
-    ctx: Context,
-) -> Dict[str, Any]:
-    """Get specific comment details with full context and discussion thread.
+# @mcp.tool
+# async def get_comment(
+#     comment_id: Annotated[int, Field(description="Productive comment ID")],
+#     ctx: Context,
+# ) -> Dict[str, Any]:
+#     """Get specific comment details with full context and discussion thread.
 
-    Returns detailed comment information including:
-    - Complete comment text and formatting
-    - Author details and timestamp
-    - Parent entity (project, task, etc.) with full context
-    - Reply thread and conversation flow
-    - Attached files, images, or documents
-    - Mentions and references to team members
+#     Returns detailed comment information including:
+#     - Complete comment text and formatting
+#     - Author details and timestamp
+#     - Parent entity (project, task, etc.) with full context
+#     - Reply thread and conversation flow
+#     - Attached files, images, or documents
+#     - Mentions and references to team members
 
-    Args:
-        comment_id: Productive comment ID
-    """
-    return await tools.get_comment(comment_id, ctx)
+#     Args:
+#         comment_id: Productive comment ID
+#     """
+#     return await tools.get_comment(comment_id, ctx)
 
 @mcp.tool
 async def get_todos(
@@ -426,27 +426,27 @@ async def get_attachments(
     )
 
 
-@mcp.tool
-async def get_attachment(
-    attachment_id: Annotated[int, Field(description="The unique Productive attachment identifier")],
-    ctx: Context,
-) -> Dict[str, Any]:
-    """Get specific attachment/file details.
-    
-    Args:
-        attachment_id: The unique Productive attachment identifier
-        ctx: MCP context for logging and error handling
+# @mcp.tool
+# async def get_attachment(
+#     attachment_id: Annotated[int, Field(description="The unique Productive attachment identifier")],
+#     ctx: Context,
+# ) -> Dict[str, Any]:
+#     """Get specific attachment/file details.
+
+#     Args:
+#         attachment_id: The unique Productive attachment identifier
+#         ctx: MCP context for logging and error handling
         
-    Returns:
-        Dictionary with complete attachment metadata including:
-        - File name, type, size
-        - Associated entity (task, comment, etc.)
-        - Upload metadata
+#     Returns:
+#         Dictionary with complete attachment metadata including:
+#         - File name, type, size
+#         - Associated entity (task, comment, etc.)
+#         - Upload metadata
         
-    Note:
-        This provides metadata only, not actual file content
-    """
-    return await tools.get_attachment(attachment_id, ctx)
+#     Note:
+#         This provides metadata only, not actual file content
+#     """
+#     return await tools.get_attachment(attachment_id, ctx)
 
 
 if __name__ == "__main__":
