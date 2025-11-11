@@ -24,13 +24,12 @@ async def _handle_productive_api_error(ctx: Context, e: ProductiveAPIError, reso
 
 
 async def get_projects(ctx: Context) -> ToolResult:
-    """Get all active projects with budgets, deadlines, and team assignments.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        
-    Returns:
-        Dictionary containing projects with full project details, budgets, and team assignments
+    """Fetch projects and post-process response for LLM safety.
+
+    Developer notes:
+    - Wraps client.get_projects(); no params used here.
+    - Applies utils.filter_response to strip noise and add webapp_url.
+    - Raises ProductiveAPIError on API failure; errors are logged via ctx.
     """
     try:
         await ctx.info("Fetching all projects")
@@ -55,20 +54,13 @@ async def get_tasks(
     sort: str = "-last_activity_at",
     extra_filters: dict = None
 ) -> ToolResult:
-    """Get tasks with optional filtering and pagination.
+    """List tasks with optional filters and pagination.
 
-    Args:
-        ctx: MCP context for logging and error handling
-        project_id: Optional Productive project ID to filter tasks by
-        page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 20, max 200)
-        sort: Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date')
-              Defaults to '-last_activity_at' (most recent activity first). Use '-' prefix for descending order.
-        extra_filters: Optional dict of additional filter query params using Productive syntax
-                       (e.g. {'filter[status][eq]': 1} for open tasks, or 2 for closed tasks)
-
-    Returns:
-        Dictionary containing tasks with assignments, time tracking, and project context
+    Developer notes:
+    - extra_filters is passed through directly to the API (e.g., filter[status][eq]).
+    - Enforces a default page[size] (20) for consistency when not provided.
+    - Sort supports Productive's allowed fields (e.g., last_activity_at, created_at, due_date).
+    - Response is cleaned with utils.filter_response.
     """
     try:
         await ctx.info("Fetching tasks")
@@ -102,14 +94,12 @@ async def get_tasks(
 
 
 async def get_task(task_id: int, ctx: Context) -> ToolResult:
-    """Get detailed task information by ID including all related data.
-    
-    Args:
-        task_id: The unique Productive task identifier (internal ID)
-        ctx: MCP context for logging and error handling
-        
-    Returns:
-        Dictionary with complete task details and project context
+    """Fetch a single task by internal ID.
+
+    Developer notes:
+    - Wraps client.get_task(task_id).
+    - Applies utils.filter_response to sanitize output.
+    - Raises ProductiveAPIError on failure.
     """
     try:
         await ctx.info(f"Fetching task with ID: {task_id}")
@@ -132,20 +122,13 @@ async def get_project_tasks(
     project_id: int,
     status: int = None
 ) -> ToolResult:
-    """Get all tasks for a specific project.
-    
-    This is optimized for getting a comprehensive view of all tasks in a project.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        project_id: The project ID to get tasks for
-        status: Optional filter by task status (1 = open, 2 = closed)
-        
-    Returns:
-        Dictionary containing all tasks for the project with full details
-        
-    Example:
-        get_project_tasks(project_id=343136, status=1)  # Get open tasks
+    """List tasks for a project with an optional status filter.
+
+    Developer notes:
+    - status expects integers per Productive: 1=open, 2=closed (mapped to filter[status][eq]).
+    - Uses page[size]=200 to reduce roundtrips.
+    - Applies utils.filter_task_list_response (lighter payload than filter_response).
+    - On 404/empty, returns an empty data array with an informational meta message.
     """
     try:
         await ctx.info(f"Fetching all tasks for project {project_id}")
@@ -184,21 +167,12 @@ async def get_project_task(
     task_number: str,
     project_id: int
 ) -> ToolResult:
-    """Get a task by its task number within a specific project.
-    
-    This is the preferred way to fetch tasks when you know the task number (e.g., #960)
-    rather than the internal ID. Task numbers are project-specific.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        task_number: The task number (e.g., "960")
-        project_id: The project ID containing the task
-        
-    Returns:
-        Dictionary with complete task details and project context
-        
-    Example:
-        get_project_task(task_number="960", project_id=343136)
+    """Fetch a task by its project-scoped task_number.
+
+    Developer notes:
+    - Uses filter[project_id][eq] and filter[task_number][eq].
+    - Returns the first matched record (API constrained to one).
+    - Raises ProductiveAPIError(404) if not found.
     """
     try:
         await ctx.info(f"Fetching task #{task_number} from project {project_id}")
@@ -240,19 +214,12 @@ async def get_comments(
     page_size: int = 20,
     extra_filters: dict = None
 ) -> ToolResult:
-    """Get all comments across projects and tasks with full context.
+    """List comments with optional filters and pagination.
 
-    Args:
-        ctx: MCP context for logging and error handling
-        project_id: Optional Productive project ID to filter comments by
-        task_id: Optional Productive task ID to filter comments by
-        page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 20, max 200)
-        extra_filters: Optional dict of additional filter query params using Productive syntax
-                       (e.g. {'filter[discussion_id]': '123', 'filter[page_id][]': ['1', '2']})
-
-    Returns:
-        Dictionary of comments with full context and related entity details
+    Developer notes:
+    - Pass-through for extra_filters (e.g., discussion_id, page_id, task_id).
+    - Enforces default page[size]=20 if not provided.
+    - Applies utils.filter_response to sanitize.
     """
     try:
         await ctx.info("Fetching comments")
@@ -286,15 +253,7 @@ async def get_comments(
 
 
 async def get_comment(comment_id: int, ctx: Context) -> ToolResult:
-    """Get specific comment details with full context and discussion thread.
-    
-    Args:
-        comment_id: The unique Productive comment identifier
-        ctx: MCP context for logging and error handling
-        
-    Returns:
-        Dictionary with complete comment details and discussion thread
-    """
+    """Fetch a single comment by ID and sanitize the response."""
     try:
         await ctx.info(f"Fetching comment with ID: {comment_id}")
         result = await client.get_comment(comment_id)
@@ -318,17 +277,13 @@ async def get_todos(
     page_size: int = 20,
     extra_filters: dict = None
 ) -> ToolResult:
-    """Get all todo checklist items across all tasks and projects.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        task_id: Optional task ID (string) to filter todos by
-        page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 15, max 200)
-        extra_filters: Optional dict of additional Productive API filters
-        
-    Returns:
-        Dictionary of todo checklist items with task context and completion tracking
+    """List todo checklist items with optional filters.
+
+    Developer notes:
+    - task_id is an int; API expects filter[task_id] to be array or scalar; we send scalar.
+    - Enforces default page[size]=20 when not provided.
+    - Use extra_filters for status ints (1=open, 2=closed) or assignee filters.
+    - Applies utils.filter_response.
     """
     try:
         await ctx.info("Fetching todos")
@@ -360,15 +315,7 @@ async def get_todos(
 
 
 async def get_todo(todo_id: int, ctx: Context) -> ToolResult:
-    """Get specific todo checklist item details with full task context.
-    
-    Args:
-        todo_id: The unique Productive todo checklist item identifier
-        ctx: MCP context for logging and error handling
-        
-    Returns:
-        Dictionary of todo checklist item with full task context and tracking details
-    """
+    """Fetch a single todo by ID and sanitize the response."""
     try:
         await ctx.info(f"Fetching todo with ID: {todo_id}")
         result = await client.get_todo(todo_id)
@@ -396,29 +343,14 @@ async def get_recent_updates(
     task_id: int = None,
     max_results: int = 100
 ) -> ToolResult:
-    """Get a summarized feed of recent activities and updates.
-    
-    Perfect for answering questions like "What happened today?" or "What did the team work on?"
-    Returns recent changes, updates, and activities in an easy-to-read format.
+    """Summarize recent activities within a time window.
 
-    Args:
-        ctx: MCP context for logging and error handling
-        hours: Number of hours to look back (default: 24, e.g., 168 for a week)
-        user_id: Optional filter by specific user/person ID (maps to filter[person_id])
-        project_id: Optional filter by specific project ID (maps to filter[project_id])
-        activity_type: Optional filter by activity type (1: Comment, 2: Changeset, 3: Email) (maps to filter[type])
-        item_type: Optional filter by item type (e.g., 'Task', 'Page', 'Deal', 'Workspace') (maps to filter[item_type])
-        event_type: Optional filter by event type (e.g., 'create', 'copy', 'update', 'delete') (maps to filter[event])
-        task_id: Optional filter by specific task ID (maps to filter[task_id])
-        max_results: Maximum number of activities to return (default: 100, max: 200)
-        
-    Returns:
-        Dictionary containing recent activities with enhanced metadata and context
-        
-    Examples:
-        get_recent_updates(hours=48, project_id=343136)  # Last 2 days on specific project
-        get_recent_updates(hours=24, activity_type=1)    # Only comments from last day
-        get_recent_updates(hours=168, item_type='Task')  # Task activities from last week
+    Developer notes:
+    - Builds filter[after] from UTC now minus `hours`.
+    - Optional filters map directly: person_id, project_id, type (1:Comment,2:Changeset,3:Email), item_type, event, task_id.
+    - Respects API page[size] limit (<=200) via max_results.
+    - Response is sanitized and meta is enriched with basic counts via _summarize_activities.
+    - Avoids unsupported sorts on /activities.
     """
     try:
         from datetime import datetime, timedelta
@@ -551,23 +483,12 @@ async def get_pages(
     page_number: int = None,
     page_size: int = 20
 ) -> ToolResult:
-    """Get all pages/documents with optional filtering.
-    
-    Pages in Productive are documents that can contain rich text content,
-    attachments, and are organized within projects.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        project_id: Optional project ID to filter pages by
-        creator_id: Optional creator ID to filter pages by
-        page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 20, max 200)
-        
-    Returns:
-        Dictionary containing pages with content, metadata, and relationships
-        
-    Example:
-        get_pages(project_id=1234)  # Get all pages for a specific project
+    """List pages (docs) with optional filters and pagination.
+
+    Developer notes:
+    - Supports project_id and creator_id filters.
+    - Enforces default page[size]=20 if not provided.
+    - Applies utils.filter_response to sanitize.
     """
     try:
         await ctx.info("Fetching pages")
@@ -598,18 +519,11 @@ async def get_pages(
 
 
 async def get_page(page_id: int, ctx: Context) -> ToolResult:
-    """Get specific page/document details with full content.
-    
-    Args:
-        page_id: The unique Productive page identifier
-        ctx: MCP context for logging and error handling
-        
-    Returns:
-        Dictionary with complete page details including JSON-formatted content
-        
-    Note:
-        The page content is stored in JSON format in the 'body' field and may need
-        parsing to extract readable text.
+    """Fetch a single page by ID.
+
+    Developer notes:
+    - Body is JSON in attributes.body (caller may parse if needed).
+    - Applies utils.filter_response to sanitize.
     """
     try:
         await ctx.info(f"Fetching page with ID: {page_id}")
@@ -633,24 +547,7 @@ async def get_attachments(
     page_size: int = 20,
     extra_filters: dict = None
 ) -> ToolResult:
-    """Get all attachments/files with optional filtering.
-    
-    Attachments are files (PDFs, images, documents) that can be associated with
-    various Productive entities like tasks, comments, expenses, etc.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 20, max 200)
-        extra_filters: Optional dict of additional filter query params
-        
-    Returns:
-        Dictionary containing attachment metadata (name, type, size, relationships)
-        Note: This provides metadata only, not actual file content
-        
-    Example:
-        get_attachments()  # Get all attachments
-    """
+    """List attachments with optional filters and pagination (metadata only)."""
     try:
         await ctx.info("Fetching attachments")
         params = {}
@@ -678,21 +575,7 @@ async def get_attachments(
 
 
 async def get_attachment(attachment_id: int, ctx: Context) -> ToolResult:
-    """Get specific attachment/file details.
-    
-    Args:
-        attachment_id: The unique Productive attachment identifier
-        ctx: MCP context for logging and error handling
-        
-    Returns:
-        Dictionary with complete attachment metadata including:
-        - File name, type, size
-        - Associated entity (task, comment, etc.)
-        - Upload metadata
-        
-    Note:
-        This provides metadata only, not actual file content
-    """
+    """Fetch a single attachment by ID (metadata only)."""
     try:
         await ctx.info(f"Fetching attachment with ID: {attachment_id}")
         result = await client.get_attachment(attachment_id)

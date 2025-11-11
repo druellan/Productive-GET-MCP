@@ -20,7 +20,7 @@ async def lifespan(server):
 
 mcp = FastMCP(
     name="Productive MCP Server",
-    instructions="Use this tool to access Productive projects, tasks, comments, and todo-lists. Focus on providing accurate and concise information based on the data available in Productive. If a project name or ID is provided, focus on that project. If a task ID is provided, focus on that task.",
+    instructions="Use this tool to access Productive projects, pages, tasks, comments, and todo-lists. Focus on providing accurate and concise information based on the data available in Productive. If a project name or ID is provided, focus on that project. If a task ID is provided, focus on that task.",
     lifespan=lifespan,
     on_duplicate_tools="warn",
     on_duplicate_resources="warn",
@@ -67,7 +67,7 @@ async def get_tasks(
     """Get tasks with optional filtering and pagination.
 
     Supports Productive's native query-language:
-      - Pagination: page_number, page_size (default 15)
+      - Pagination: page_number, page_size (default 20)
       - Filtering: project_id, or any extra_filters dict
       - Sorting: sort parameter (defaults to most recent activity first)
       - All params are optional; omit to fetch all tasks.
