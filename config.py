@@ -10,6 +10,7 @@ class Config:
         self.base_url = os.getenv("PRODUCTIVE_BASE_URL", "https://api.productive.io/api/v2")
         self.timeout = int(os.getenv("PRODUCTIVE_TIMEOUT", "30"))
         self.organization = int(os.getenv("PRODUCTIVE_ORGANIZATION", ""))
+        self.items_per_page = int(os.getenv("PRODUCTIVE_ITEMS_PER_PAGE", "30"))
 
     def validate(self) -> bool:
         """Validate configuration"""

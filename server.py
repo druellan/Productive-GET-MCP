@@ -49,8 +49,8 @@ async def get_tasks(
         int, Field(description="Page number for pagination")
     ] = None,
     page_size: Annotated[
-        int, Field(description="Number of tasks per page (default 20, max 200)")
-    ] = 20,
+        int, Field(description="Optional number of tasks per page (max 200)")
+    ] = None,
     sort: Annotated[
         str,
         Field(
@@ -180,8 +180,8 @@ async def get_comments(
     ] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
     page_size: Annotated[
-        int, Field(description="Number of comments per page (default 20, max 200)")
-    ] = 20,
+        int, Field(description="Optional number of comments per page (max 200)")
+    ] = None,
     extra_filters: Annotated[
         dict,
         Field(
@@ -232,7 +232,7 @@ async def get_todos(
     ctx: Context,
     task_id: Annotated[int, Field(description="Productive task ID to filter todos by")] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
-    page_size: Annotated[int, Field(description="Number of todos per page (default 20, max 200)")] = 20,
+    page_size: Annotated[int, Field(description="Optional number of todos per page (max 200)")] = None,
     extra_filters: Annotated[dict, Field(description="Additional Productive query filters using API syntax. Common filters: filter[task_id][eq] (ID), filter[status][eq] (1: open, 2: closed), filter[assignee_id][eq] (ID).")] = None
 ) -> Dict[str, Any]:
     """Get all todo checklist items across all tasks and projects.
@@ -297,8 +297,8 @@ async def get_recent_updates(
         int, Field(description="Optional: Filter by specific task ID")
     ] = None,
     max_results: Annotated[
-        int, Field(description="Maximum number of activities to return (default: 100, max: 200)")
-    ] = 100,
+        int, Field(description="Optional maximum number of activities to return (max: 200)")
+    ] = None,
 ) -> Dict[str, Any]:
     """Get a summarized feed of recent activities and updates.
 
@@ -342,8 +342,8 @@ async def get_pages(
     ] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
     page_size: Annotated[
-        int, Field(description="Number of pages per page (default 20, max 200)")
-    ] = 20,
+        int, Field(description="Optional number of pages per page (max 200)")
+    ] = None,
 ) -> Dict[str, Any]:
     """Get all pages/documents with optional filtering.
     
@@ -394,8 +394,8 @@ async def get_attachments(
     ctx: Context,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
     page_size: Annotated[
-        int, Field(description="Number of attachments per page (default 20, max 200)")
-    ] = 20,
+        int, Field(description="Optional number of attachments per page (max 200)")
+    ] = None,
     extra_filters: Annotated[
         dict,
         Field(description="Additional Productive query filters using API syntax")

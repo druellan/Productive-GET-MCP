@@ -1,6 +1,7 @@
 from fastmcp import Context
 from fastmcp.tools.tool import ToolResult
 
+from config import config
 from productive_client import client, ProductiveAPIError
 from utils import filter_response, filter_task_list_response
 
@@ -71,7 +72,7 @@ async def get_tasks(
         if page_size is not None:
             params["page[size]"] = page_size
         else:
-            params["page[size]"] = 20
+            params["page[size]"] = config.items_per_page
         if project_id is not None:
             params["filter[project_id][eq]"] = project_id
         if sort:
@@ -136,7 +137,7 @@ async def get_project_tasks(
         # Get all tasks for the project with a high limit
         params = {
             "filter[project_id][eq]": project_id,
-            "page[size]": 200  # Maximum to get comprehensive view
+            "page[size]": config.items_per_page  # Configurable limit for comprehensive view
         }
         
         # Status filter: 1 = open, 2 = closed (per Productive API docs)
@@ -230,7 +231,7 @@ async def get_comments(
         if page_size is not None:
             params["page[size]"] = page_size
         else:
-            params["page[size]"] = 20
+            params["page[size]"] = config.items_per_page
         if project_id is not None:
             params["filter[project_id][]"] = project_id
         if task_id is not None:
@@ -294,7 +295,7 @@ async def get_todos(
         if page_size is not None:
             params["page[size]"] = page_size
         else:
-            params["page[size]"] = 20
+            params["page[size]"] = config.items_per_page
         if task_id is not None:
             params["filter[task_id]"] = [task_id]
         if extra_filters:
@@ -341,7 +342,7 @@ async def get_recent_updates(
     item_type: str = None,
     event_type: str = None,
     task_id: int = None,
-    max_results: int = 100
+    max_results: int = None
 ) -> ToolResult:
     """Summarize recent activities within a time window.
 
@@ -354,7 +355,10 @@ async def get_recent_updates(
     """
     try:
         from datetime import datetime, timedelta
-        
+
+        if max_results is None:
+            max_results = config.items_per_page
+
         # Validate max_results
         if max_results > 200:
             await ctx.warning("max_results exceeds API limit of 200, using 200")
@@ -498,7 +502,7 @@ async def get_pages(
         if page_size is not None:
             params["page[size]"] = page_size
         else:
-            params["page[size]"] = 20
+            params["page[size]"] = config.items_per_page
         if project_id is not None:
             params["filter[project_id][]"] = project_id
         if creator_id is not None:
@@ -556,7 +560,7 @@ async def get_attachments(
         if page_size is not None:
             params["page[size]"] = page_size
         else:
-            params["page[size]"] = 20
+            params["page[size]"] = config.items_per_page
         if extra_filters:
             params.update(extra_filters)
 
