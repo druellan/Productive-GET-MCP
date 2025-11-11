@@ -96,13 +96,11 @@ async def get_task(
     Use this when you have the internal task ID (e.g., 14677418).
     For looking up tasks by their project-specific number (e.g., #960), use get_project_task instead.
 
-    Returns comprehensive task details including:
-    - Task description, priority, and current status
-    - Assigned team member with role and hourly rate
-    - Parent project with budget and client details
-    - Time tracking: estimated vs actual hours
-    - All comments and discussion history
-    - Attached files and checklist items (todos)
+    Returns task details including:
+    - Task title, description, and status (open/closed)
+    - Due date, start date, and creation/update timestamps
+    - Time tracking: initial estimate, remaining time, billable time, and worked time (in minutes)
+    - Todo counts: total and open
     """
     return await tools.get_task(task_id=task_id, ctx=ctx)
 
