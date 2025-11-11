@@ -286,25 +286,51 @@ async def get_recent_updates(
     project_id: Annotated[
         int, Field(description="Optional: Filter by specific project ID")
     ] = None,
+    activity_type: Annotated[
+        int, Field(description="Optional: Filter by activity type (1: Comment, 2: Changeset, 3: Email)")
+    ] = None,
+    item_type: Annotated[
+        str, Field(description="Optional: Filter by item type. Accepted values include: Workspace, Task, Page, Deal, Project, Person, Discussion, Invoice, TimeEntry, Section, TaskList, Pipeline, Dashboard, Team. Note: This list is not exhaustive; see Productive Activities docs for latest values.")
+    ] = None,
+    event_type: Annotated[
+        str, Field(description="Optional: Filter by event type. Common values include: create, copy, edit, delete. Note: The full set isn't fixed and may evolve; see Productive Activities docs for current list.")
+    ] = None,
+    task_id: Annotated[
+        int, Field(description="Optional: Filter by specific task ID")
+    ] = None,
+    max_results: Annotated[
+        int, Field(description="Maximum number of activities to return (default: 100, max: 200)")
+    ] = 100,
 ) -> Dict[str, Any]:
     """Get a summarized feed of recent activities and updates.
-    
+
+    Returns recent changes, task updates, comments, and activities in chronological order.
+
     Perfect for status updates and answering questions like:
     - "What happened today?"
     - "What did the team work on this week?"
     - "Show me recent updates on project X"
     - "What did John do yesterday?"
-    
-    Returns recent changes, task updates, comments, and activities in chronological order.
-    Much more efficient than manually filtering activities - gives you exactly what you need.
-    
+
     Examples:
         get_recent_updates()  # Last 24 hours, all activity
         get_recent_updates(hours=168)  # Last week
         get_recent_updates(hours=48, project_id=343136)  # Last 2 days on specific project
         get_recent_updates(hours=24, user_id=12345)  # What a specific user did today
+        get_recent_updates(hours=24, activity_type=1)  # Only comments from last day
+        get_recent_updates(hours=168, item_type='Task')  # Task activities from last week
     """
-    return await tools.get_recent_updates(ctx, hours, user_id, project_id)
+    return await tools.get_recent_updates(
+        ctx,
+        hours=hours,
+        user_id=user_id,
+        project_id=project_id,
+        activity_type=activity_type,
+        item_type=item_type,
+        event_type=event_type,
+        task_id=task_id,
+        max_results=max_results
+    )
 
 
 @mcp.tool

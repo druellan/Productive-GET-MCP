@@ -389,27 +389,44 @@ async def get_recent_updates(
     ctx: Context,
     hours: int = 24,
     user_id: int = None,
-    project_id: int = None
+    project_id: int = None,
+    activity_type: int = None,
+    item_type: str = None,
+    event_type: str = None,
+    task_id: int = None,
+    max_results: int = 100
 ) -> ToolResult:
     """Get a summarized feed of recent activities and updates.
     
     Perfect for answering questions like "What happened today?" or "What did the team work on?"
     Returns recent changes, updates, and activities in an easy-to-read format.
-    
+
     Args:
         ctx: MCP context for logging and error handling
         hours: Number of hours to look back (default: 24, e.g., 168 for a week)
-        user_id: Optional filter by specific user/person ID
-        project_id: Optional filter by specific project ID
+        user_id: Optional filter by specific user/person ID (maps to filter[person_id])
+        project_id: Optional filter by specific project ID (maps to filter[project_id])
+        activity_type: Optional filter by activity type (1: Comment, 2: Changeset, 3: Email) (maps to filter[type])
+        item_type: Optional filter by item type (e.g., 'Task', 'Page', 'Deal', 'Workspace') (maps to filter[item_type])
+        event_type: Optional filter by event type (e.g., 'create', 'copy', 'update', 'delete') (maps to filter[event])
+        task_id: Optional filter by specific task ID (maps to filter[task_id])
+        max_results: Maximum number of activities to return (default: 100, max: 200)
         
     Returns:
-        Dictionary containing recent activities with timestamps and context
+        Dictionary containing recent activities with enhanced metadata and context
         
-    Example:
+    Examples:
         get_recent_updates(hours=48, project_id=343136)  # Last 2 days on specific project
+        get_recent_updates(hours=24, activity_type=1)    # Only comments from last day
+        get_recent_updates(hours=168, item_type='Task')  # Task activities from last week
     """
     try:
         from datetime import datetime, timedelta
+        
+        # Validate max_results
+        if max_results > 200:
+            await ctx.warning("max_results exceeds API limit of 200, using 200")
+            max_results = 200
         
         # Calculate the cutoff time
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
@@ -417,17 +434,30 @@ async def get_recent_updates(
         
         await ctx.info(f"Fetching activities from the last {hours} hours")
         
-        # Build filter params
+        # Build comprehensive filter params
         params = {
             "filter[after]": after_date,
-            "page[size]": 100  # Get more activities for summary
+            "page[size]": max_results
         }
         
+        # Apply optional filters
         if user_id:
             params["filter[person_id]"] = user_id
             
         if project_id:
             params["filter[project_id]"] = project_id
+            
+        if activity_type:
+            params["filter[type]"] = activity_type
+            
+        if item_type:
+            params["filter[item_type]"] = item_type
+            
+        if event_type:
+            params["filter[event]"] = event_type
+            
+        if task_id:
+            params["filter[task_id]"] = task_id
         
         result = await client.get_activities(params=params)
         
@@ -437,11 +467,24 @@ async def get_recent_updates(
                 "data": [],
                 "meta": {
                     "message": f"No activities found in the last {hours} hours",
-                    "hours": hours
+                    "hours": hours,
+                    "filters_applied": _get_applied_filters(params),
+                    "cutoff_time": after_date
                 }
             }
         
         filtered = filter_response(result)
+        
+        # Enhance metadata with activity summary
+        activity_summary = _summarize_activities(filtered.get("data", []))
+        filtered["meta"] = filtered.get("meta", {})
+        filtered["meta"].update({
+            "activity_summary": activity_summary,
+            "total_activities": len(filtered.get("data", [])),
+            "filters_applied": _get_applied_filters(params),
+            "cutoff_time": after_date
+        })
+        
         await ctx.info(f"Successfully retrieved {len(result['data'])} recent activities")
         
         return filtered
@@ -451,6 +494,54 @@ async def get_recent_updates(
     except Exception as e:
         await ctx.error(f"Unexpected error fetching recent updates: {str(e)}")
         raise e
+
+
+def _get_applied_filters(params: dict) -> dict:
+    """Extract and format the filters that were actually applied."""
+    applied_filters = {}
+    
+    # Remove pagination and standard params
+    filter_params = {k: v for k, v in params.items() if k.startswith("filter[")}
+    
+    for key, value in filter_params.items():
+        # Extract filter name from key like "filter[person_id]"
+        filter_name = key.replace("filter[", "").replace("]", "")
+        applied_filters[filter_name] = value
+    
+    return applied_filters
+
+
+def _summarize_activities(activities: list) -> dict:
+    """Create a summary of activities by type and event."""
+    summary = {
+        "by_type": {},
+        "by_event": {},
+        "by_item_type": {},
+        "total": len(activities)
+    }
+    
+    for activity in activities:
+        if not isinstance(activity, dict):
+            continue
+            
+        attributes = activity.get("attributes", {})
+        activity_type = attributes.get("type")
+        event_type = attributes.get("event")
+        item_type = attributes.get("item_type")
+        
+        # Count by activity type
+        if activity_type:
+            summary["by_type"][activity_type] = summary["by_type"].get(activity_type, 0) + 1
+            
+        # Count by event type
+        if event_type:
+            summary["by_event"][event_type] = summary["by_event"].get(event_type, 0) + 1
+            
+        # Count by item type
+        if item_type:
+            summary["by_item_type"][item_type] = summary["by_item_type"].get(item_type, 0) + 1
+    
+    return summary
 
 
 async def get_pages(
