@@ -28,6 +28,15 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'todos': [],
         'pages': ['preferences', 'cover_image_meta', 'custom_fields', 'body'],
         'attachments': ['attachable_type', 'attachable_id'],
+        'projects': [
+            'sample_data',
+            'template',
+            'time_on_tasks',
+            'project_color_id',
+            'duplication_status',
+            'project_type_id',
+            'preferences'
+        ],
     }
     
     # Fields to strip HTML from per type
