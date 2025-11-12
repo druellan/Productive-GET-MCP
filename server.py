@@ -5,6 +5,11 @@ from config import config
 from productive_client import client
 import tools
 from contextlib import asynccontextmanager
+import json
+
+def minified_json_serializer(data: Any) -> str:
+    """Serialize data to minified JSON."""
+    return json.dumps(data, separators=(',', ':'))
 
 @asynccontextmanager
 async def lifespan(server):
@@ -26,7 +31,8 @@ mcp = FastMCP(
     lifespan=lifespan,
     on_duplicate_tools="warn",
     on_duplicate_resources="warn",
-    on_duplicate_prompts="warn"
+    on_duplicate_prompts="warn",
+    tool_serializer=minified_json_serializer
 )
 
 @mcp.tool
