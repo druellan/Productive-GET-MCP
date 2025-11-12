@@ -3,7 +3,7 @@ from fastmcp.tools.tool import ToolResult
 
 from config import config
 from productive_client import client, ProductiveAPIError
-from utils import filter_response, filter_task_list_response
+from utils import filter_response, filter_task_list_response, filter_page_list_response
 
 
 async def _handle_productive_api_error(ctx: Context, e: ProductiveAPIError, resource_type: str = "data") -> None:
@@ -61,7 +61,7 @@ async def get_tasks(
     - extra_filters is passed through directly to the API (e.g., filter[status][eq]).
     - Enforces a configurable default page[size] for consistency when not provided.
     - Sort supports Productive's allowed fields (e.g., last_activity_at, created_at, due_date).
-    - Response is cleaned with utils.filter_response.
+    - Response is cleaned with utils.filter_task_list_response (excludes descriptions for lean lists).
     """
     try:
         await ctx.info("Fetching tasks")
@@ -79,7 +79,7 @@ async def get_tasks(
         result = await client.get_tasks(params=params if params else None)
         await ctx.info("Successfully retrieved tasks")
 
-        filtered = filter_response(result)
+        filtered = filter_task_list_response(result)
 
         return filtered
 
@@ -480,7 +480,7 @@ async def get_pages(
     Developer notes:
     - Supports project_id and creator_id filters.
     - Enforces configurable default page[size] if not provided.
-    - Applies utils.filter_response to sanitize.
+    - Applies utils.filter_response to sanitize (body excluded via type='pages').
     - Uses consistent scalar filters: filter[project_id][eq], filter[creator_id][eq]
     """
     try:
@@ -493,11 +493,11 @@ async def get_pages(
             params["filter[project_id][eq]"] = project_id
         if creator_id is not None:
             params["filter[creator_id][eq]"] = creator_id
-
         result = await client.get_pages(params=params if params else None)
         await ctx.info("Successfully retrieved pages")
         
-        filtered = filter_response(result)
+        # For lists, remove heavy fields like body explicitly
+        filtered = filter_page_list_response(result)
         
         return filtered
         
@@ -513,7 +513,7 @@ async def get_page(ctx: Context, page_id: int) -> ToolResult:
 
     Developer notes:
     - Body is JSON in attributes.body (caller may parse if needed).
-    - Applies utils.filter_response to sanitize.
+    - Applies utils.filter_response to sanitize (body included via type='page').
     """
     try:
         await ctx.info(f"Fetching page with ID: {page_id}")

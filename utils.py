@@ -18,7 +18,12 @@ def get_webapp_url(resource_type: str, resource_id: str) -> str:
     return f"https://app.productive.io/{org_id}/{resource_type}/{resource_id}"
 
 def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, Any]:
-    """Filter out unwanted attributes and strip HTML from specific fields based on object type."""
+    """Filter out unwanted attributes and strip HTML from specific fields based on object type.
+    
+    Args:
+        attributes: The attributes dictionary to filter
+        obj_type: The type of object (tasks, pages, page, etc.)
+    """
     filtered = dict(attributes)
     
     # Fields to remove per type
@@ -26,7 +31,8 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'tasks': ['creation_method_id', 'email_key', 'placement'],
         'comments': [],
         'todos': [],
-        'pages': ['preferences', 'cover_image_meta', 'custom_fields', 'body'],
+        'pages': ['preferences', 'cover_image_meta', 'custom_fields'],
+        'page': ['preferences', 'cover_image_meta', 'custom_fields'],
         'attachments': ['attachable_type', 'attachable_id'],
         'projects': [
             'sample_data',
@@ -45,6 +51,7 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'comments': ['body'],
         'todos': ['description'],
         'pages': [],
+        'page': [],
     }
     
     # Remove unwanted fields
@@ -242,4 +249,41 @@ def filter_task_list_response(response: Dict[str, Any]) -> Dict[str, Any]:
         filtered["meta"] = _clean_meta_object(response["meta"])
     
     # Clean up empty values
+    return remove_null_and_empty(filtered)
+
+
+def filter_page_list_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """Filter page list responses to keep metadata and drop heavy body field.
+
+    - Removes attributes.body from each page item
+    - Keeps other attributes as-is after general cleaning
+    - Preserves meta (cleaned) and adds webapp_url per item
+    """
+    if not isinstance(response, dict):
+        return response
+
+    filtered: Dict[str, Any] = {}
+
+    # Process data array
+    if "data" in response and isinstance(response["data"], list):
+        filtered_data = []
+        for item in response["data"]:
+            if isinstance(item, dict) and item.get("type") == "pages":
+                new_item = {"id": item.get("id"), "type": item.get("type")}
+                attrs = item.get("attributes", {})
+                if isinstance(attrs, dict):
+                    # Copy attributes without body
+                    new_attrs = dict(attrs)
+                    new_attrs.pop("body", None)
+                    new_item["attributes"] = new_attrs
+                _add_webapp_url(new_item)
+                filtered_data.append(new_item)
+            else:
+                filtered_data.append(item)
+        filtered["data"] = filtered_data
+
+    # Keep meta if present (has useful info like total_count)
+    if "meta" in response:
+        filtered["meta"] = _clean_meta_object(response["meta"])
+
     return remove_null_and_empty(filtered)
