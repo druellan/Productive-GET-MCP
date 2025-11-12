@@ -219,6 +219,7 @@ async def get_comments(
     Developer notes:
     - Pass-through for extra_filters (e.g., discussion_id, page_id, task_id).
     - Enforces configurable default page[size] if not provided.
+    - Sort defaults to "-created_at" (most recent first).
     - Applies utils.filter_response to sanitize.
     - Uses consistent scalar filters: filter[project_id][eq], filter[task_id][eq]
     """
@@ -234,6 +235,9 @@ async def get_comments(
             params["filter[task_id][eq]"] = task_id
         if extra_filters:
             params.update(extra_filters)
+
+        # Add default sorting
+        params["sort"] = "-created_at"
 
         result = await client.get_comments(params=params if params else None)
         await ctx.info("Successfully retrieved comments")
@@ -280,6 +284,7 @@ async def get_todos(
     - task_id is an int; API expects filter[task_id] to be array or scalar; we send scalar.
     - Enforces configurable default page[size] when not provided.
     - Use extra_filters for status ints (1=open, 2=closed) or assignee filters.
+    - Sorting not supported by API - uses default order.
     - Applies utils.filter_response.
     """
     try:
@@ -547,6 +552,7 @@ async def get_attachments(
 
     Developer notes:
     - Enforces configurable default page[size] when not provided.
+    - Sorting not supported by API - uses default order.
     """
     try:
         await ctx.info("Fetching attachments")
