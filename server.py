@@ -273,7 +273,7 @@ async def get_todo(
     return await tools.get_todo(ctx, todo_id)
 
 @mcp.tool
-async def get_recent_updates(
+async def get_recent_activity(
     ctx: Context,
     hours: Annotated[
         int, Field(description="Number of hours to look back (default: 24, use 168 for a week)")
@@ -302,23 +302,24 @@ async def get_recent_updates(
 ) -> Dict[str, Any]:
     """Get a summarized feed of recent activities and updates.
 
-    Returns recent changes, task updates, comments, and activities in chronological order.
+    Returns recent changes, task updates, comments, new documents and activities in chronological order.
 
     Perfect for status updates and answering questions like:
     - "What happened today?"
     - "What did the team work on this week?"
     - "Show me recent updates on project X"
     - "What did John do yesterday?"
+    - "What documents Anna worked on last week?"
 
     Examples:
-        get_recent_updates()  # Last 24 hours, all activity
-        get_recent_updates(hours=168)  # Last week
-        get_recent_updates(hours=48, project_id=343136)  # Last 2 days on specific project
-        get_recent_updates(hours=24, user_id=12345)  # What a specific user did today
-        get_recent_updates(hours=24, activity_type=1)  # Only comments from last day
-        get_recent_updates(hours=168, item_type='Task')  # Task activities from last week
+        get_recent_activity()  # Last 24 hours, all activity
+        get_recent_activity(hours=168)  # Last week
+        get_recent_activity(hours=48, project_id=343136)  # Last 2 days on specific project
+        get_recent_activity(hours=24, user_id=12345)  # What a specific user did today
+        get_recent_activity(hours=24, activity_type=1)  # Only comments from last day
+        get_recent_activity(hours=168, item_type='Task')  # Task activities from last week
     """
-    return await tools.get_recent_updates(
+    return await tools.get_recent_activity(
         ctx,
         hours=hours,
         user_id=user_id,

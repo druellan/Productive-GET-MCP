@@ -149,7 +149,7 @@ Retrieve attachments/files with optional filtering and pagination.
 - `page_size` (int, optional): Page size for pagination
 - `extra_filters` (dict, optional): Additional Productive API filters
 
-### `get_recent_updates`
+### `get_recent_activity`
 Get a summarized feed of recent activities and updates. Perfect for status updates.
 
 **Properties:**

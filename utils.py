@@ -31,8 +31,8 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'tasks': ['creation_method_id', 'email_key', 'placement'],
         'comments': [],
         'todos': [],
-        'pages': ['preferences', 'cover_image_meta', 'custom_fields'],
-        'page': ['preferences', 'cover_image_meta', 'custom_fields'],
+        'pages': ['preferences', 'cover_image_meta', 'custom_fields', 'version_number', 'position'],
+        'page': ['preferences', 'cover_image_meta', 'custom_fields', 'version_number', 'position'],
         'attachments': ['attachable_type', 'attachable_id'],
         'projects': [
             'sample_data',

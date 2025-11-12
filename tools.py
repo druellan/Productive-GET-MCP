@@ -330,7 +330,7 @@ async def get_todo(ctx: Context, todo_id: int) -> ToolResult:
         raise e
 
 
-async def get_recent_updates(
+async def get_recent_activity(
     ctx: Context,
     hours: int = 24,
     user_id: int = None,
