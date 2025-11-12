@@ -269,10 +269,6 @@ async def get_todo(
     - Due date relative to parent task timeline
     - Time estimates vs actual completion time
     - Related comments and file attachments
-
-    Args:
-        ctx: MCP context for logging and error handling
-        todo_id: The Productive todo ID
     """
     return await tools.get_todo(ctx, todo_id)
 
@@ -292,10 +288,10 @@ async def get_recent_updates(
         int, Field(description="Optional: Filter by activity type (1: Comment, 2: Changeset, 3: Email)")
     ] = None,
     item_type: Annotated[
-        str, Field(description="Optional: Filter by item type. Accepted values include: Workspace, Task, Page, Deal, Project, Person, Discussion, Invoice, TimeEntry, Section, TaskList, Pipeline, Dashboard, Team. Note: This list is not exhaustive; see Productive Activities docs for latest values.")
+        str, Field(description="Optional: Filter by item type. Accepted values include: Task, Page, Project, Person, Discussion, TimeEntry, Section, TaskList, Dashboard, Team. Note: This list is not exhaustive; see Productive Activities docs for latest values.")
     ] = None,
     event_type: Annotated[
-        str, Field(description="Optional: Filter by event type. Common values include: create, copy, edit, delete. Note: The full set isn't fixed and may evolve; see Productive Activities docs for current list.")
+        str, Field(description="Optional: Filter by event type. Common values include: create, copy, edit, delete; see Productive Activities docs for current list.")
     ] = None,
     task_id: Annotated[
         int, Field(description="Optional: Filter by specific task ID")
@@ -353,13 +349,6 @@ async def get_pages(
     
     Pages in Productive are documents that can contain rich text content,
     attachments, and are organized within projects.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        project_id: Optional project ID to filter pages by
-        creator_id: Optional creator ID to filter pages by
-        page_number: Optional page number for pagination
-        page_size: Page size for pagination (max 200)
         
     Returns:
         Dictionary containing pages with content, metadata, and relationships
@@ -382,10 +371,6 @@ async def get_page(
     page_id: Annotated[int, Field(description="The unique Productive page identifier")],
 ) -> Dict[str, Any]:
     """Get specific page/document details with full content.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        page_id: The unique Productive page identifier
         
     Returns:
         Dictionary with complete page details including JSON-formatted content
@@ -409,12 +394,6 @@ async def get_attachments(
     
     Attachments are files (PDFs, images, documents) that can be associated with
     various Productive entities like tasks, comments, expenses, etc.
-    
-    Args:
-        ctx: MCP context for logging and error handling
-        page_number: Optional page number for pagination
-        page_size: Page size for pagination (max 200)
-        extra_filters: Optional dict of additional filter query params
         
     Returns:
         Dictionary containing attachment metadata (name, type, size, relationships)

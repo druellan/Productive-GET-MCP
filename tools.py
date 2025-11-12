@@ -9,10 +9,10 @@ from utils import filter_response, filter_task_list_response, filter_page_list_r
 async def _handle_productive_api_error(ctx: Context, e: ProductiveAPIError, resource_type: str = "data") -> None:
     """Handle ProductiveAPIError consistently across all tool functions.
     
-    Args:
-        ctx: MCP context for logging and error handling
-        e: The ProductiveAPIError exception
-        resource_type: Type of resource being fetched (e.g., "projects", "tasks", "comments")
+    Developer notes:
+    - ctx: MCP context for logging and error handling
+    - e: The ProductiveAPIError exception
+    - resource_type: Type of resource being fetched (e.g., "projects", "tasks", "comments")
     """
     await ctx.error(f"Productive API error: {e.message}")
     
