@@ -28,13 +28,14 @@ async def get_projects(ctx: Context) -> ToolResult:
     """Fetch projects and post-process response for LLM safety.
 
     Developer notes:
-    - Wraps client.get_projects(); no params used here.
+    - Wraps client.get_projects(); sorts by most recent activity first.
     - Applies utils.filter_response to strip noise and add webapp_url.
     - Raises ProductiveAPIError on API failure; errors are logged via ctx.
     """
     try:
         await ctx.info("Fetching all projects")
-        result = await client.get_projects()
+        params = {"sort": "-last_activity_at"}
+        result = await client.get_projects(params=params)
         await ctx.info("Successfully retrieved projects")
         filtered = filter_response(result)
 
@@ -123,6 +124,7 @@ async def get_project_tasks(
 
     Developer notes:
     - status expects integers per Productive: 1=open, 2=closed (mapped to filter[status][eq]).
+    - Sorts by most recent activity first.
     - Uses configurable page[size] for consistency.
     - Applies utils.filter_task_list_response (lighter payload than filter_response).
     - On 404/empty, returns an empty data array with an informational meta message.
@@ -139,6 +141,8 @@ async def get_project_tasks(
         # Status filter: 1 = open, 2 = closed (per Productive API docs)
         if status is not None:
             params["filter[status][eq]"] = status
+        
+        params["sort"] = "-last_activity_at"
         
         result = await client.get_tasks(params=params)
         
@@ -480,6 +484,7 @@ async def get_pages(
     Developer notes:
     - Supports project_id and creator_id filters.
     - Enforces configurable default page[size] if not provided.
+    - Sorts by most recent updates first.
     - Applies utils.filter_response to sanitize (body excluded via type='pages').
     - Uses consistent scalar filters: filter[project_id][eq], filter[creator_id][eq]
     """
@@ -493,6 +498,7 @@ async def get_pages(
             params["filter[project_id][eq]"] = project_id
         if creator_id is not None:
             params["filter[creator_id][eq]"] = creator_id
+        params["sort"] = "-updated_at"
         result = await client.get_pages(params=params if params else None)
         await ctx.info("Successfully retrieved pages")
         

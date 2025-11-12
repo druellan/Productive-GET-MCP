@@ -74,9 +74,9 @@ class ProductiveClient:
                     continue
                 raise ProductiveAPIError(f"Request failed: {str(e)}")
 
-    async def get_projects(self) -> Dict[str, Any]:
+    async def get_projects(self, params: Optional[dict] = None) -> Dict[str, Any]:
         """Get all projects"""
-        return await self._request("GET", "/projects")
+        return await self._request("GET", "/projects", params=params)
 
     async def get_tasks(self, params: Optional[dict] = None) -> Dict[str, Any]:
         """Get all tasks
