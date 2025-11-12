@@ -18,6 +18,7 @@ This implementation is tailored for read-only operations, providing streamlined 
 - **Get Attachments**: Retrieve attachments/files with filtering
 - **Get Todos**: Retrieve todo items with filtering
 - **Get Todo**: Retrieve a specific todo by ID
+- **Search Recent Activities**: Search through recent activities for specific text content across all resources
 - **LLM-Optimized Responses**: Filtered output removes noise, strips HTML, and reduces token consumption
 
 ## Requirements
@@ -171,6 +172,30 @@ Retrieve todo checklist items with optional filtering and pagination.
 - `page_number` (int, optional): Page number for pagination
 - `page_size` (int, optional): Page size for pagination
 - `extra_filters` (dict, optional): Additional Productive API filters
+
+### `search_recent_activities`
+Search through recent activities for specific text content across all Productive resources.
+
+**Properties:**
+- `query` (str): The search term to look for (case-insensitive)
+
+**Description:**
+Searches through the last 30 days of Productive activities (tasks, pages, comments, etc.) to find matches for your query. This provides a quick way to find relevant content without needing to search individual resources.
+
+**Search Fields:**
+- Task titles and descriptions
+- Page titles and content
+- Comment text
+- Project names
+- Person names
+- Any other text content in recent activities
+
+**Examples:**
+```python
+search_recent_activities("deploy")  # Find all mentions of "deploy"
+search_recent_activities("meeting notes")  # Search for "meeting notes"
+search_recent_activities("bug fix")  # Find bug-related activities
+```
 
 ### `get_todo`
 Retrieve a specific todo checklist item by ID.

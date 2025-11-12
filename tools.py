@@ -592,4 +592,108 @@ async def get_attachment(ctx: Context, attachment_id: int) -> ToolResult:
         await _handle_productive_api_error(ctx, e, f"attachment {attachment_id}")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching attachment: {str(e)}")
+
+
+async def search_recent_activities(ctx: Context, query: str) -> ToolResult:
+    """Search through recent activities for specific text content.
+    
+    Searches through the last 30 days of Productive activities (tasks, pages, comments, etc.)
+    to find matches for your query. This provides a quick way to find relevant content
+    without needing to search individual resources.
+    
+    Args:
+        query: The search term to look for (case-insensitive)
+    
+    Returns:
+        Activities containing the search term in any searchable field
+        
+    Examples:
+        search_recent_activities("deploy")  # Find all mentions of "deploy"
+        search_recent_activities("meeting notes")  # Search for "meeting notes"
+        search_recent_activities("bug fix")  # Find bug-related activities
+    """
+    try:
+        from datetime import datetime, timedelta
+        
+        if not query or not query.strip():
+            return {
+                "data": [],
+                "meta": {
+                    "message": "Empty search query provided",
+                    "query": query,
+                    "total_matches": 0
+                }
+            }
+        
+        # Search last 30 days (720 hours)
+        cutoff_time = datetime.utcnow() - timedelta(hours=720)
+        after_date = cutoff_time.isoformat() + "Z"
+        
+        await ctx.info(f"Searching activities for '{query}' in the last 30 days")
+        
+        # Fetch all recent activities using the existing client method
+        params = {
+            "filter[after]": after_date,
+            "page[size]": 200  # Maximum allowed by API
+        }
+        
+        result = await client.get_activities(params=params)
+        
+        if not result.get("data") or len(result["data"]) == 0:
+            await ctx.info("No activities found in the last 30 days")
+            return {
+                "data": [],
+                "meta": {
+                    "message": "No activities found in the last 30 days",
+                    "query": query,
+                    "total_matches": 0,
+                    "cutoff_time": after_date
+                }
+            }
+        
+        # Prepare search query (case-insensitive)
+        search_term = query.lower().strip()
+        
+        # Search through activities across all text fields
+        matches = []
+        searchable_fields = ["title", "body", "item_name", "person_name", "project_name"]
+        
+        for activity in result["data"]:
+            if not isinstance(activity, dict):
+                continue
+                
+            attributes = activity.get("attributes", {})
+            
+            # Check all searchable text fields
+            for field in searchable_fields:
+                field_value = attributes.get(field, "")
+                if isinstance(field_value, str) and field_value:
+                    if search_term in field_value.lower():
+                        matches.append(activity)
+                        break  # Found match, no need to check other fields
+        
+        # Filter the response
+        filtered = filter_response({"data": matches})
+        
+        # Enhance metadata with search results
+        search_metadata = {
+            "query": query,
+            "total_matches": len(matches),
+            "total_searched": len(result["data"]),
+            "cutoff_time": after_date,
+            "search_fields": searchable_fields
+        }
+        
+        filtered["meta"] = filtered.get("meta", {})
+        filtered["meta"].update(search_metadata)
+        
+        await ctx.info(f"Search completed: {len(matches)} matches found out of {len(result['data'])} activities")
+        
+        return filtered
+        
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, "activities for search")
+    except Exception as e:
+        await ctx.error(f"Unexpected error during search: {str(e)}")
+        raise e
         raise e
