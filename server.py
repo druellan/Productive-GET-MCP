@@ -378,19 +378,19 @@ async def get_pages(
 
 @mcp.tool
 async def get_page(
-    page_id: Annotated[int, Field(description="The unique Productive page identifier")],
     ctx: Context,
+    page_id: Annotated[int, Field(description="The unique Productive page identifier")],
 ) -> Dict[str, Any]:
     """Get specific page/document details with full content.
     
     Args:
-        page_id: The unique Productive page identifier
         ctx: MCP context for logging and error handling
+        page_id: The unique Productive page identifier
         
     Returns:
         Dictionary with complete page details including JSON-formatted content
     """
-    return await tools.get_page(page_id, ctx)
+    return await tools.get_page(ctx, page_id)
 
 
 @mcp.tool
