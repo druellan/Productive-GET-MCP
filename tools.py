@@ -51,7 +51,7 @@ async def get_tasks(
     ctx: Context,
     project_id: int = None,
     page_number: int = None,
-    page_size: int = 20,
+    page_size: int = config.items_per_page,
     sort: str = "-last_activity_at",
     extra_filters: dict = None
 ) -> ToolResult:
@@ -59,7 +59,7 @@ async def get_tasks(
 
     Developer notes:
     - extra_filters is passed through directly to the API (e.g., filter[status][eq]).
-    - Enforces a default page[size] (20) for consistency when not provided.
+    - Enforces a configurable default page[size] for consistency when not provided.
     - Sort supports Productive's allowed fields (e.g., last_activity_at, created_at, due_date).
     - Response is cleaned with utils.filter_response.
     """
@@ -68,11 +68,7 @@ async def get_tasks(
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
-        # Always apply default page_size to ensure consistent pagination
-        if page_size is not None:
-            params["page[size]"] = page_size
-        else:
-            params["page[size]"] = config.items_per_page
+        params["page[size]"] = page_size
         if project_id is not None:
             params["filter[project_id][eq]"] = project_id
         if sort:
@@ -94,7 +90,7 @@ async def get_tasks(
         raise e
 
 
-async def get_task(task_id: int, ctx: Context) -> ToolResult:
+async def get_task(ctx: Context, task_id: int) -> ToolResult:
     """Fetch a single task by internal ID.
 
     Developer notes:
@@ -127,7 +123,7 @@ async def get_project_tasks(
 
     Developer notes:
     - status expects integers per Productive: 1=open, 2=closed (mapped to filter[status][eq]).
-    - Uses page[size]=200 to reduce roundtrips.
+    - Uses configurable page[size] for consistency.
     - Applies utils.filter_task_list_response (lighter payload than filter_response).
     - On 404/empty, returns an empty data array with an informational meta message.
     """
@@ -181,8 +177,7 @@ async def get_project_task(
         # Get tasks for the project filtered by task_number
         params = {
             "filter[project_id][eq]": project_id,
-            "filter[task_number][eq]": task_number,
-            "page[size]": 1
+            "filter[task_number][eq]": task_number
         }
         
         result = await client.get_tasks(params=params)
@@ -212,30 +207,27 @@ async def get_comments(
     project_id: int = None,
     task_id: int = None,
     page_number: int = None,
-    page_size: int = 20,
+    page_size: int = config.items_per_page,
     extra_filters: dict = None
 ) -> ToolResult:
     """List comments with optional filters and pagination.
 
     Developer notes:
     - Pass-through for extra_filters (e.g., discussion_id, page_id, task_id).
-    - Enforces default page[size]=20 if not provided.
+    - Enforces configurable default page[size] if not provided.
     - Applies utils.filter_response to sanitize.
+    - Uses consistent scalar filters: filter[project_id][eq], filter[task_id][eq]
     """
     try:
         await ctx.info("Fetching comments")
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
-        # Always apply default page_size to ensure consistent pagination
-        if page_size is not None:
-            params["page[size]"] = page_size
-        else:
-            params["page[size]"] = config.items_per_page
+        params["page[size]"] = page_size
         if project_id is not None:
-            params["filter[project_id][]"] = project_id
+            params["filter[project_id][eq]"] = project_id
         if task_id is not None:
-            params["filter[task_id]"] = task_id
+            params["filter[task_id][eq]"] = task_id
         if extra_filters:
             params.update(extra_filters)
 
@@ -253,7 +245,7 @@ async def get_comments(
         raise e
 
 
-async def get_comment(comment_id: int, ctx: Context) -> ToolResult:
+async def get_comment(ctx: Context, comment_id: int) -> ToolResult:
     """Fetch a single comment by ID and sanitize the response."""
     try:
         await ctx.info(f"Fetching comment with ID: {comment_id}")
@@ -275,14 +267,14 @@ async def get_todos(
     ctx: Context,
     task_id: int = None,
     page_number: int = None,
-    page_size: int = 20,
+    page_size: int = config.items_per_page,
     extra_filters: dict = None
 ) -> ToolResult:
     """List todo checklist items with optional filters.
 
     Developer notes:
     - task_id is an int; API expects filter[task_id] to be array or scalar; we send scalar.
-    - Enforces default page[size]=20 when not provided.
+    - Enforces configurable default page[size] when not provided.
     - Use extra_filters for status ints (1=open, 2=closed) or assignee filters.
     - Applies utils.filter_response.
     """
@@ -291,11 +283,7 @@ async def get_todos(
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
-        # Always apply default page_size to ensure consistent pagination
-        if page_size is not None:
-            params["page[size]"] = page_size
-        else:
-            params["page[size]"] = config.items_per_page
+        params["page[size]"] = page_size
         if task_id is not None:
             params["filter[task_id]"] = [task_id]
         if extra_filters:
@@ -315,7 +303,7 @@ async def get_todos(
         raise e
 
 
-async def get_todo(todo_id: int, ctx: Context) -> ToolResult:
+async def get_todo(ctx: Context, todo_id: int) -> ToolResult:
     """Fetch a single todo by ID and sanitize the response."""
     try:
         await ctx.info(f"Fetching todo with ID: {todo_id}")
@@ -485,28 +473,26 @@ async def get_pages(
     project_id: int = None,
     creator_id: int = None,
     page_number: int = None,
-    page_size: int = 20
+    page_size: int = config.items_per_page
 ) -> ToolResult:
     """List pages (docs) with optional filters and pagination.
 
     Developer notes:
     - Supports project_id and creator_id filters.
-    - Enforces default page[size]=20 if not provided.
+    - Enforces configurable default page[size] if not provided.
     - Applies utils.filter_response to sanitize.
+    - Uses consistent scalar filters: filter[project_id][eq], filter[creator_id][eq]
     """
     try:
         await ctx.info("Fetching pages")
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
-        if page_size is not None:
-            params["page[size]"] = page_size
-        else:
-            params["page[size]"] = config.items_per_page
+        params["page[size]"] = page_size
         if project_id is not None:
-            params["filter[project_id][]"] = project_id
+            params["filter[project_id][eq]"] = project_id
         if creator_id is not None:
-            params["filter[creator_id][]"] = creator_id
+            params["filter[creator_id][eq]"] = creator_id
 
         result = await client.get_pages(params=params if params else None)
         await ctx.info("Successfully retrieved pages")
@@ -522,7 +508,7 @@ async def get_pages(
         raise e
 
 
-async def get_page(page_id: int, ctx: Context) -> ToolResult:
+async def get_page(ctx: Context, page_id: int) -> ToolResult:
     """Fetch a single page by ID.
 
     Developer notes:
@@ -548,19 +534,20 @@ async def get_page(page_id: int, ctx: Context) -> ToolResult:
 async def get_attachments(
     ctx: Context,
     page_number: int = None,
-    page_size: int = 20,
+    page_size: int = config.items_per_page,
     extra_filters: dict = None
 ) -> ToolResult:
-    """List attachments with optional filters and pagination (metadata only)."""
+    """List attachments with optional filters and pagination (metadata only).
+
+    Developer notes:
+    - Enforces configurable default page[size] when not provided.
+    """
     try:
         await ctx.info("Fetching attachments")
         params = {}
         if page_number is not None:
             params["page[number]"] = page_number
-        if page_size is not None:
-            params["page[size]"] = page_size
-        else:
-            params["page[size]"] = config.items_per_page
+        params["page[size]"] = page_size
         if extra_filters:
             params.update(extra_filters)
 
@@ -578,7 +565,7 @@ async def get_attachments(
         raise e
 
 
-async def get_attachment(attachment_id: int, ctx: Context) -> ToolResult:
+async def get_attachment(ctx: Context, attachment_id: int) -> ToolResult:
     """Fetch a single attachment by ID (metadata only)."""
     try:
         await ctx.info(f"Fetching attachment with ID: {attachment_id}")

@@ -10,8 +10,10 @@ from contextlib import asynccontextmanager
 async def lifespan(server):
     """Server lifespan context manager"""
     # Startup
-    if not config.validate():
-        raise ValueError("Invalid configuration: API token and base URL are required")
+    try:
+        config.validate()
+    except ValueError as e:
+        raise ValueError(f"Configuration error: {str(e)}")
     
     yield
     
@@ -67,7 +69,7 @@ async def get_tasks(
     """Get tasks with optional filtering and pagination.
 
     Supports Productive's native query-language:
-      - Pagination: page_number, page_size (default 20)
+      - Pagination: page_number, page_size (configurable default)
       - Filtering: project_id, or any extra_filters dict
       - Sorting: sort parameter (defaults to most recent activity first)
       - All params are optional; omit to fetch all tasks.
@@ -102,7 +104,7 @@ async def get_task(
     - Time tracking: initial estimate, remaining time, billable time, and worked time (in minutes)
     - Todo counts: total and open
     """
-    return await tools.get_task(task_id=task_id, ctx=ctx)
+    return await tools.get_task(ctx=ctx, task_id=task_id)
 
 
 @mcp.tool
@@ -209,8 +211,8 @@ async def get_comments(
 
 # @mcp.tool
 # async def get_comment(
-#     comment_id: Annotated[int, Field(description="Productive comment ID")],
 #     ctx: Context,
+#     comment_id: Annotated[int, Field(description="Productive comment ID")],
 # ) -> Dict[str, Any]:
 #     """Get specific comment details with full context and discussion thread.
 
@@ -223,9 +225,10 @@ async def get_comments(
 #     - Mentions and references to team members
 
 #     Args:
+#         ctx: MCP context for logging and error handling
 #         comment_id: Productive comment ID
 #     """
-#     return await tools.get_comment(comment_id, ctx)
+#     return await tools.get_comment(ctx, comment_id)
 
 @mcp.tool
 async def get_todos(
@@ -254,8 +257,8 @@ async def get_todos(
 
 @mcp.tool
 async def get_todo(
-    todo_id: Annotated[int, Field(description="Productive todo ID")],
     ctx: Context,
+    todo_id: Annotated[int, Field(description="Productive todo ID")],
 ) -> Dict[str, Any]:
     """Get specific todo checklist item details with full task context.
 
@@ -268,9 +271,10 @@ async def get_todo(
     - Related comments and file attachments
 
     Args:
+        ctx: MCP context for logging and error handling
         todo_id: The Productive todo ID
     """
-    return await tools.get_todo(todo_id, ctx)
+    return await tools.get_todo(ctx, todo_id)
 
 @mcp.tool
 async def get_recent_updates(
@@ -355,7 +359,7 @@ async def get_pages(
         project_id: Optional project ID to filter pages by
         creator_id: Optional creator ID to filter pages by
         page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 20, max 200)
+        page_size: Page size for pagination (max 200)
         
     Returns:
         Dictionary containing pages with content, metadata, and relationships
@@ -409,7 +413,7 @@ async def get_attachments(
     Args:
         ctx: MCP context for logging and error handling
         page_number: Optional page number for pagination
-        page_size: Page size for pagination (default 20, max 200)
+        page_size: Page size for pagination (max 200)
         extra_filters: Optional dict of additional filter query params
         
     Returns:

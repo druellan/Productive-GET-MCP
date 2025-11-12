@@ -10,11 +10,40 @@ class Config:
         self.base_url = os.getenv("PRODUCTIVE_BASE_URL", "https://api.productive.io/api/v2")
         self.timeout = int(os.getenv("PRODUCTIVE_TIMEOUT", "30"))
         self.organization = int(os.getenv("PRODUCTIVE_ORGANIZATION", ""))
-        self.items_per_page = int(os.getenv("PRODUCTIVE_ITEMS_PER_PAGE", "30"))
+        self.items_per_page = int(os.getenv("PRODUCTIVE_ITEMS_PER_PAGE", "50"))
 
     def validate(self) -> bool:
-        """Validate configuration"""
-        return bool(self.api_key and self.base_url)
+        """Validate configuration
+        
+        Returns:
+            bool: True if configuration is valid, False otherwise
+            
+        Raises:
+            ValueError: If configuration is invalid with detailed error message
+        """
+        errors = []
+        
+        if not self.api_key:
+            errors.append("PRODUCTIVE_API_KEY is required")
+            
+        if not self.base_url:
+            errors.append("PRODUCTIVE_BASE_URL is required")
+            
+        if not self.organization:
+            errors.append("PRODUCTIVE_ORGANIZATION is required")
+        elif not isinstance(self.organization, int) or self.organization <= 0:
+            errors.append("PRODUCTIVE_ORGANIZATION must be a positive integer")
+            
+        if self.timeout <= 0:
+            errors.append("PRODUCTIVE_TIMEOUT must be a positive integer")
+            
+        if self.items_per_page <= 0 or self.items_per_page > 200:
+            errors.append("PRODUCTIVE_ITEMS_PER_PAGE must be between 1 and 200")
+            
+        if errors:
+            raise ValueError("Configuration validation failed: " + "; ".join(errors))
+            
+        return True
 
     @property
     def headers(self) -> dict:

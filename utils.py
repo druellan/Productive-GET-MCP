@@ -26,7 +26,7 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'tasks': ['creation_method_id', 'email_key', 'placement'],
         'comments': [],
         'todos': [],
-        'pages': ['preferences', 'cover_image_meta', 'custom_fields'],
+        'pages': ['preferences', 'cover_image_meta', 'custom_fields', 'body'],
         'attachments': ['attachable_type', 'attachable_id'],
     }
     
@@ -35,7 +35,7 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
         'tasks': ['description'],
         'comments': ['body'],
         'todos': ['description'],
-        'pages': ['body'],
+        'pages': [],
     }
     
     # Remove unwanted fields
@@ -134,7 +134,14 @@ def remove_null_and_empty(obj: Any) -> Any:
 
 
 def _clean_meta_object(meta: Dict[str, Any]) -> Dict[str, Any]:
-    """Clean meta object by removing unwanted fields."""
+    """Clean meta object by removing unwanted fields.
+    
+    Args:
+        meta: The meta dictionary from API response
+        
+    Returns:
+        Cleaned meta dictionary with unwanted fields removed
+    """
     cleaned = dict(meta)
     
     # Remove 'included' when it's explicitly False
