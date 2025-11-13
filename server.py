@@ -410,25 +410,32 @@ async def get_attachments(
 
 
 @mcp.tool
-async def search_recent_activities(
+async def search_recent_entries(
     ctx: Context,
-    query: Annotated[str, Field(description="The search term to look for in recent activities")]
+    query: Annotated[str, Field(description="The search term to look for in recent entries")]
 ) -> Dict[str, Any]:
-    """Search through recent activities for specific text content.
-    
-    Searches through the last 30 days of Productive activities (tasks, pages, comments, etc.)
-    to find matches for your query. This provides a quick way to find relevant content
-    without needing to search individual resources.
-    
-    Returns activities containing the search term in titles, descriptions, comments,
+    """Search through recent entries across all Productive content types.
+
+    Searches through the last 30 days of Productive activities and entries (tasks, pages,
+    projects, comments, discussions, etc.) to find matches for your query. Universal search
+    across all content types without needing to search individual resources.
+
+    Returns recent entries containing the search term in titles, descriptions, comments,
     or any other text content from recent project activity.
-    
+
+    Perfect for quick search everything and answering questions like:
+    - "Can you find a task with this title?"
+    - "I want documentation about this topic."
+    - "Someone commented this recently, can you find it?"
+    - "Anna created a page about this topic last week."
+
     Examples:
-        search_recent_activities("deploy")  # Find all mentions of "deploy"
-        search_recent_activities("meeting notes")  # Search for "meeting notes"
-        search_recent_activities("bug fix")  # Find bug-related activities
+        search_recent_entries("deploy")  # Find all mentions of "deploy"
+        search_recent_entries("meeting notes")  # Search for "meeting notes"
+        search_recent_entries("bug fix")  # Find bug-related activities
+        search_recent_entries("website guidelines")  # Find documentation pages
     """
-    return await tools.search_recent_activities(ctx, query)
+    return await tools.search_recent_entries(ctx, query)
 
 
 

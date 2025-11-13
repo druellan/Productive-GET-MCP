@@ -173,7 +173,7 @@ Retrieve todo checklist items with optional filtering and pagination.
 - `page_size` (int, optional): Page size for pagination
 - `extra_filters` (dict, optional): Additional Productive API filters
 
-### `search_recent_activities`
+### `search_recent_entries`
 Search through recent activities for specific text content across all Productive resources.
 
 **Properties:**
@@ -192,9 +192,9 @@ Searches through the last 30 days of Productive activities (tasks, pages, commen
 
 **Examples:**
 ```python
-search_recent_activities("deploy")  # Find all mentions of "deploy"
-search_recent_activities("meeting notes")  # Search for "meeting notes"
-search_recent_activities("bug fix")  # Find bug-related activities
+search_recent_entries("deploy")  # Find all mentions of "deploy"
+search_recent_entries("meeting notes")  # Search for "meeting notes"
+search_recent_entries("bug fix")  # Find bug-related activities
 ```
 
 ### `get_todo`

@@ -594,23 +594,19 @@ async def get_attachment(ctx: Context, attachment_id: int) -> ToolResult:
         await ctx.error(f"Unexpected error fetching attachment: {str(e)}")
 
 
-async def search_recent_activities(ctx: Context, query: str) -> ToolResult:
-    """Search through recent activities for specific text content.
-    
-    Searches through the last 30 days of Productive activities (tasks, pages, comments, etc.)
-    to find matches for your query. This provides a quick way to find relevant content
-    without needing to search individual resources.
-    
+async def search_recent_entries(ctx: Context, query: str) -> ToolResult:
+    """Search through recent entries across all Productive content types.
+
+    Searches through the last 30 days of Productive activities and entries (tasks, pages,
+    projects, comments, discussions, etc.) to find matches for your query. This provides
+    a universal search across all content types without needing to search individual resources.
+
     Args:
         query: The search term to look for (case-insensitive)
-    
+
     Returns:
-        Activities containing the search term in any searchable field
-        
-    Examples:
-        search_recent_activities("deploy")  # Find all mentions of "deploy"
-        search_recent_activities("meeting notes")  # Search for "meeting notes"
-        search_recent_activities("bug fix")  # Find bug-related activities
+        Recent entries containing the search term in titles, descriptions, comments,
+        or any other text content from recent project activity
     """
     try:
         from datetime import datetime, timedelta
@@ -625,11 +621,11 @@ async def search_recent_activities(ctx: Context, query: str) -> ToolResult:
                 }
             }
         
-        # Search last 30 days (720 hours)
-        cutoff_time = datetime.utcnow() - timedelta(hours=720)
+        # Search last 60 days (1440 hours)
+        cutoff_time = datetime.utcnow() - timedelta(hours=1440)
         after_date = cutoff_time.isoformat() + "Z"
         
-        await ctx.info(f"Searching activities for '{query}' in the last 30 days")
+        await ctx.info(f"Searching activities for '{query}' in the last 60 days")
         
         # Fetch all recent activities using the existing client method
         params = {
@@ -640,11 +636,11 @@ async def search_recent_activities(ctx: Context, query: str) -> ToolResult:
         result = await client.get_activities(params=params)
         
         if not result.get("data") or len(result["data"]) == 0:
-            await ctx.info("No activities found in the last 30 days")
+            await ctx.info("No activities found in the last 60 days")
             return {
                 "data": [],
                 "meta": {
-                    "message": "No activities found in the last 30 days",
+                    "message": "No activities found in the last 60 days",
                     "query": query,
                     "total_matches": 0,
                     "cutoff_time": after_date
