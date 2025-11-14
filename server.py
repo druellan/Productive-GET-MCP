@@ -22,11 +22,19 @@ async def lifespan(server):
 
 mcp = FastMCP(
     name="Productive MCP Server",
-    instructions="Use this tool to access Productive projects, pages, tasks, comments, and todo-lists. Focus on providing accurate and concise information based on the data available in Productive. If a project name or ID is provided, focus on that project. If a task ID is provided, focus on that task.",
+    instructions = (
+        "Use this tool to access Productive projects, pages (documents), tasks, comments, and todo-lists."
+        "Focus on providing accurate and concise information based on the data available in Productive."
+        "If a project name or ID is provided, focus on that project. If a task ID is provided, focus on that task."
+        "For inexact queries, use search_recent_entries to find relevant entries."
+        "For questions like 'What did the team work on today?', use get_recent_activity."
+        "For complete detail about a specific task, use get_task or get_project_task -> get_comments -> get_todos."
+    ),
+    version="1.1.0",
     lifespan=lifespan,
     on_duplicate_tools="warn",
     on_duplicate_resources="warn",
-    on_duplicate_prompts="warn"
+    on_duplicate_prompts="warn",
 )
 
 @mcp.tool
@@ -304,13 +312,6 @@ async def get_recent_activity(
 
     Returns recent changes, task updates, comments, new documents and activities in chronological order.
 
-    Perfect for status updates and answering questions like:
-    - "What happened today?"
-    - "What did the team work on this week?"
-    - "Show me recent updates on project X"
-    - "What did John do yesterday?"
-    - "What documents Anna worked on last week?"
-
     Examples:
         get_recent_activity()  # Last 24 hours, all activity
         get_recent_activity(hours=168)  # Last week
@@ -416,18 +417,12 @@ async def search_recent_entries(
 ) -> Dict[str, Any]:
     """Search through recent entries across all Productive content types.
 
-    Searches through the last 30 days of Productive activities and entries (tasks, pages,
+    Searches through the last 90 days (and max of 200 entries) of Productive activities and entries (tasks, pages,
     projects, comments, discussions, etc.) to find matches for your query. Universal search
     across all content types without needing to search individual resources.
 
     Returns recent entries containing the search term in titles, descriptions, comments,
     or any other text content from recent project activity.
-
-    Perfect for quick search everything and answering questions like:
-    - "Can you find a task with this title?"
-    - "I want documentation about this topic."
-    - "Someone commented this recently, can you find it?"
-    - "Anna created a page about this topic last week."
 
     Examples:
         search_recent_entries("deploy")  # Find all mentions of "deploy"

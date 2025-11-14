@@ -597,7 +597,7 @@ async def get_attachment(ctx: Context, attachment_id: int) -> ToolResult:
 async def search_recent_entries(ctx: Context, query: str) -> ToolResult:
     """Search through recent entries across all Productive content types.
 
-    Searches through the last 30 days of Productive activities and entries (tasks, pages,
+    Searches through the last 90 days of Productive activities and entries (tasks, pages,
     projects, comments, discussions, etc.) to find matches for your query. This provides
     a universal search across all content types without needing to search individual resources.
 
@@ -621,11 +621,11 @@ async def search_recent_entries(ctx: Context, query: str) -> ToolResult:
                 }
             }
         
-        # Search last 60 days (1440 hours)
-        cutoff_time = datetime.utcnow() - timedelta(hours=1440)
+        # Search last 90 days (2160 hours)
+        cutoff_time = datetime.utcnow() - timedelta(hours=2160)
         after_date = cutoff_time.isoformat() + "Z"
         
-        await ctx.info(f"Searching activities for '{query}' in the last 60 days")
+        await ctx.info(f"Searching 200 activities for '{query}' in the last 90 days")
         
         # Fetch all recent activities using the existing client method
         params = {
