@@ -127,6 +127,22 @@ class ProductiveClient:
         """Get attachment by ID"""
         return await self._request("GET", f"/attachments/{str(attachment_id)}")
 
+    async def quick_search(self, query: str, search_types: Optional[list] = None, deep_search: bool = True, page: int = 1, per_page: int = 50) -> Dict[str, Any]:
+        """Quick search across projects, tasks, pages, and actions"""
+        if search_types is None:
+            search_types = ["action", "project", "task", "page"]
+        
+        params = {
+            "filter[query]": query,
+            "filter[type]": ",".join(search_types),
+            "filter[status]": "all",
+            "filter[deep_search]": str(deep_search).lower(),
+            "page": page,
+            "per_page": per_page
+        }
+        
+        return await self._request("GET", "/search/quick", params=params)
+
     async def close(self):
         """Close HTTP client"""
         await self.client.aclose()

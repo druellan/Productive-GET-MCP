@@ -18,7 +18,7 @@ This implementation is tailored for read-only operations, providing streamlined 
 - **Get Attachments**: Retrieve attachments/files with filtering
 - **Get Todos**: Retrieve todo items with filtering
 - **Get Todo**: Retrieve a specific todo by ID
-- **Search Recent Activities**: Search through recent activities for specific text content across all resources
+- **Quick Search**: Fast, comprehensive search across projects, tasks, pages, and actions
 - **LLM-Optimized Responses**: Filtered output removes noise, strips HTML, and reduces token consumption
 
 ## Requirements
@@ -173,28 +173,36 @@ Retrieve todo checklist items with optional filtering and pagination.
 - `page_size` (int, optional): Page size for pagination
 - `extra_filters` (dict, optional): Additional Productive API filters
 
-### `search_recent_entries`
-Search through recent activities for specific text content across all Productive resources.
+### `quick_search`
+Quick search across projects, tasks, pages, and actions.
 
 **Properties:**
-- `query` (str): The search term to look for (case-insensitive)
+- `query` (str): Search query string
+- `search_types` (list[str], optional): List of types to search (action, project, task, page). Defaults to all.
+- `deep_search` (bool, optional): Whether to perform deep search (default: True)
+- `page` (int, optional): Page number for pagination (default: 1)
+- `per_page` (int, optional): Results per page (default: 50)
 
 **Description:**
-Searches through the last 30 days of Productive activities (tasks, pages, comments, etc.) to find matches for your query. This provides a quick way to find relevant content without needing to search individual resources.
+Provides fast, comprehensive search across all Productive content types including projects, tasks, pages, and actions. It's optimized for quick lookups and general search queries.
 
-**Search Fields:**
-- Task titles and descriptions
-- Page titles and content
-- Comment text
-- Project names
-- Person names
-- Any other text content in recent activities
+**Response Format:**
+Returns filtered results optimized for LLM consumption with only essential fields:
+- `record_id`: Unique identifier for the resource
+- `record_type`: Type of resource (project, task, page, etc.)
+- `title`: Display title (with search highlights removed)
+- `subtitle`: Additional context or description
+- `icon_url`: URL to the resource's icon/avatar (if available)
+- `status`: Current status (active, closed, etc.)
+- `project_name`: Name of the associated project
+- `updated_at`: Last update timestamp
+- `webapp_url`: Direct link to view the resource in Productive web interface
 
 **Examples:**
 ```python
-search_recent_entries("deploy")  # Find all mentions of "deploy"
-search_recent_entries("meeting notes")  # Search for "meeting notes"
-search_recent_entries("bug fix")  # Find bug-related activities
+quick_search("deployment")  # Search for "deployment" across all content types
+quick_search("meeting notes", search_types=["project"])  # Search only in projects
+quick_search("this week summary", deep_search=False)  # Quick search without deep scan
 ```
 
 ### `get_todo`

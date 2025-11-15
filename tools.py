@@ -594,102 +594,102 @@ async def get_attachment(ctx: Context, attachment_id: int) -> ToolResult:
         await ctx.error(f"Unexpected error fetching attachment: {str(e)}")
 
 
-async def search_recent_entries(ctx: Context, query: str) -> ToolResult:
-    """Search through recent entries across all Productive content types.
+async def quick_search(
+    ctx: Context,
+    query: str,
+    search_types: list[str] = None,
+    deep_search: bool = True,
+    page: int = 1,
+    per_page: int = 50
+) -> ToolResult:
+    """Quick search across projects, tasks, pages, and actions.
 
-    Searches through the last 90 days of Productive activities and entries (tasks, pages,
-    projects, comments, discussions, etc.) to find matches for your query. This provides
-    a universal search across all content types without needing to search individual resources.
+    This tool provides fast, comprehensive search across all Productive content types
+    including projects, tasks, pages, and actions. It's optimized for quick lookups
+    and general search queries.
 
     Args:
-        query: The search term to look for (case-insensitive)
+        query: Search query string
+        search_types: List of types to search (action, project, task, page).
+                     Defaults to ["action", "project", "task", "page"] if not provided.
+        deep_search: Whether to perform deep search (default: True)
+        page: Page number for pagination (default: 1)
+        per_page: Results per page (default: 50)
 
     Returns:
-        Recent entries containing the search term in titles, descriptions, comments,
-        or any other text content from recent project activity
+        Search results from Productive API including:
+        - Matching projects, tasks, pages, and actions
+        - Relevance scores and metadata
+        - Full entity details for each match
     """
     try:
-        from datetime import datetime, timedelta
-        
-        if not query or not query.strip():
-            return {
-                "data": [],
-                "meta": {
-                    "message": "Empty search query provided",
-                    "query": query,
-                    "total_matches": 0
-                }
-            }
-        
-        # Search last 90 days (2160 hours)
-        cutoff_time = datetime.utcnow() - timedelta(hours=2160)
-        after_date = cutoff_time.isoformat() + "Z"
-        
-        await ctx.info(f"Searching 200 activities for '{query}' in the last 90 days")
-        
-        # Fetch all recent activities using the existing client method
-        params = {
-            "filter[after]": after_date,
-            "page[size]": 200  # Maximum allowed by API
-        }
-        
-        result = await client.get_activities(params=params)
-        
-        if not result.get("data") or len(result["data"]) == 0:
-            await ctx.info("No activities found in the last 60 days")
-            return {
-                "data": [],
-                "meta": {
-                    "message": "No activities found in the last 60 days",
-                    "query": query,
-                    "total_matches": 0,
-                    "cutoff_time": after_date
-                }
-            }
-        
-        # Prepare search query (case-insensitive)
-        search_term = query.lower().strip()
-        
-        # Search through activities across all text fields
-        matches = []
-        searchable_fields = ["title", "body", "item_name", "person_name", "project_name"]
-        
-        for activity in result["data"]:
-            if not isinstance(activity, dict):
-                continue
-                
-            attributes = activity.get("attributes", {})
+        # Set default search_types if not provided
+        if search_types is None:
+            search_types = ["action", "project", "task", "page"]
+
+        await ctx.info(f"Quick search with query: '{query}'")
+
+        # Call the quick search method
+        result = await client.quick_search(
+            query=query,
+            search_types=search_types,
+            deep_search=deep_search,
+            page=page,
+            per_page=per_page
+        )
+
+        await ctx.info(f"Successfully retrieved {len(result.get('data', []))} search results")
+
+        # Filter results to include only essential fields
+        filtered_data = []
+        for item in result.get("data", []):
+            attributes = item.get("attributes", {})
+            record_type = attributes.get("record_type", "")
             
-            # Check all searchable text fields
-            for field in searchable_fields:
-                field_value = attributes.get(field, "")
-                if isinstance(field_value, str) and field_value:
-                    if search_term in field_value.lower():
-                        matches.append(activity)
-                        break  # Found match, no need to check other fields
-        
-        # Filter the response
-        filtered = filter_response({"data": matches})
-        
-        # Enhance metadata with search results
-        search_metadata = {
-            "query": query,
-            "total_matches": len(matches),
-            "total_searched": len(result["data"]),
-            "cutoff_time": after_date,
-            "search_fields": searchable_fields
+            # Construct webapp URL
+            webapp_url = f"https://app.productive.io/27956-lineout/{record_type}s/{attributes.get('record_id', '')}"
+            
+            filtered_item = {
+                "record_id": attributes.get("record_id"),
+                "record_type": record_type,
+                "title": attributes.get("title", ""),
+                "subtitle": attributes.get("subtitle", ""),
+                "icon_url": attributes.get("icon_url"),
+                "status": attributes.get("status", ""),
+                "project_name": attributes.get("meta", {}).get("project_name", ""),
+                "updated_at": attributes.get("updated_at", ""),
+                "webapp_url": webapp_url
+            }
+            filtered_data.append(filtered_item)
+
+        return {
+            "data": filtered_data,
+            "meta": {
+                "query": query,
+                "search_types": search_types,
+                "deep_search": deep_search,
+                "page": page,
+                "per_page": per_page,
+                "total_results": len(filtered_data)
+            }
         }
-        
-        filtered["meta"] = filtered.get("meta", {})
-        filtered["meta"].update(search_metadata)
-        
-        await ctx.info(f"Search completed: {len(matches)} matches found out of {len(result['data'])} activities")
-        
-        return filtered
-        
+
     except ProductiveAPIError as e:
-        await _handle_productive_api_error(ctx, e, "activities for search")
+        await ctx.error(f"Quick search failed: {e.message}")
+        return {
+            "data": [],
+            "meta": {
+                "error": str(e),
+                "status_code": e.status_code,
+                "query": query
+            }
+        }
     except Exception as e:
-        await ctx.error(f"Unexpected error during search: {str(e)}")
-        raise e
-        raise e
+        await ctx.error(f"Unexpected error during quick search: {str(e)}")
+        return {
+            "data": [],
+            "meta": {
+                "error": str(e),
+                "query": query
+            }
+        }

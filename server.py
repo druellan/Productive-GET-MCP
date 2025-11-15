@@ -26,7 +26,7 @@ mcp = FastMCP(
         "Use this tool to access Productive projects, pages (documents), tasks, comments, and todo-lists."
         "Focus on providing accurate and concise information based on the data available in Productive."
         "If a project name or ID is provided, focus on that project. If a task ID is provided, focus on that task."
-        "For inexact queries, use search_recent_entries to find relevant entries."
+        "For inexact queries, use quick_search to find relevant entries."
         "For questions like 'What did the team work on today?', use get_recent_activity."
         "For complete detail about a specific task, use get_task or get_project_task -> get_comments -> get_todos."
     ),
@@ -232,9 +232,6 @@ async def get_comments(
 #     - Attached files, images, or documents
 #     - Mentions and references to team members
 
-#     Args:
-#         ctx: MCP context for logging and error handling
-#         comment_id: Productive comment ID
 #     """
 #     return await tools.get_comment(ctx, comment_id)
 
@@ -411,26 +408,46 @@ async def get_attachments(
 
 
 @mcp.tool
-async def search_recent_entries(
+async def quick_search(
     ctx: Context,
-    query: Annotated[str, Field(description="The search term to look for in recent entries")]
+    query: Annotated[str, Field(description="Search query string")],
+    search_types: Annotated[
+        list[str],
+        Field(description="List of types to search (action, project, task, page). Defaults to all.")
+    ] = None,
+    deep_search: Annotated[
+        bool, Field(description="Whether to perform deep search")
+    ] = True,
+    page: Annotated[int, Field(description="Page number for pagination")] = 1,
+    per_page: Annotated[int, Field(description="Results per page")] = 50
 ) -> Dict[str, Any]:
-    """Search through recent entries across all Productive content types.
-
-    Searches through the last 90 days (and max of 200 entries) of Productive activities and entries (tasks, pages,
-    projects, comments, discussions, etc.) to find matches for your query. Universal search
-    across all content types without needing to search individual resources.
-
-    Returns recent entries containing the search term in titles, descriptions, comments,
-    or any other text content from recent project activity.
-
+    """Quick search across projects, tasks, pages, and actions.
+    
+    This tool provides fast, comprehensive search across all Productive content types
+    including projects, tasks, pages, and actions. It's optimized for quick lookups
+    and general search queries.
+    
+    Returns:
+        Search results from Productive API including:
+        - Matching projects, tasks, pages, and actions
+        - Relevance scores and metadata
+        - Full entity details for each match
+    
     Examples:
-        search_recent_entries("deploy")  # Find all mentions of "deploy"
-        search_recent_entries("meeting notes")  # Search for "meeting notes"
-        search_recent_entries("bug fix")  # Find bug-related activities
-        search_recent_entries("website guidelines")  # Find documentation pages
+        quick_search("ded")  # Search for "ded" across all content types
+        quick_search("project", search_types=["project"])  # Search only in projects
+        quick_search("meeting", deep_search=False)  # Quick search without deep scan
     """
-    return await tools.search_recent_entries(ctx, query)
+    return await tools.quick_search(
+        ctx,
+        query=query,
+        search_types=search_types,
+        deep_search=deep_search,
+        page=page,
+        per_page=per_page
+    )
+
+
 
 
 
@@ -440,10 +457,6 @@ async def search_recent_entries(
 #     ctx: Context,
 # ) -> Dict[str, Any]:
 #     """Get specific attachment/file details.
-
-#     Args:
-#         attachment_id: The unique Productive attachment identifier
-#         ctx: MCP context for logging and error handling
         
 #     Returns:
 #         Dictionary with complete attachment metadata including:
