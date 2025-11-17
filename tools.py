@@ -50,7 +50,6 @@ async def get_projects(ctx: Context) -> ToolResult:
 
 async def get_tasks(
     ctx: Context,
-    project_id: int = None,
     page_number: int = None,
     page_size: int = config.items_per_page,
     sort: str = "-last_activity_at",
@@ -70,8 +69,6 @@ async def get_tasks(
         if page_number is not None:
             params["page[number]"] = page_number
         params["page[size]"] = page_size
-        if project_id is not None:
-            params["filter[project_id][eq]"] = project_id
         if sort:
             params["sort"] = sort
         if extra_filters:

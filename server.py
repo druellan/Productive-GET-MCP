@@ -52,9 +52,6 @@ async def get_projects(ctx: Context) -> Dict[str, Any]:
 @mcp.tool
 async def get_tasks(
     ctx: Context,
-    project_id: Annotated[
-        int, Field(description="Productive project ID to filter tasks by")
-    ] = None,
     page_number: Annotated[
         int, Field(description="Page number for pagination")
     ] = None,
@@ -77,8 +74,7 @@ async def get_tasks(
     """Get tasks with optional filtering and pagination.
 
     Supports Productive's native query-language:
-      - Pagination: page_number, page_size (configurable default)
-      - Filtering: project_id, or any extra_filters dict
+      - Pagination: page_number, page_size
       - Sorting: sort parameter (defaults to most recent activity first)
       - All params are optional; omit to fetch all tasks.
 
@@ -87,7 +83,6 @@ async def get_tasks(
     """
     return await tools.get_tasks(
         ctx,
-        project_id=project_id,
         page_number=page_number,
         page_size=page_size,
         sort=sort,
