@@ -53,11 +53,14 @@ async def get_tasks(
     page_number: int = None,
     page_size: int = config.items_per_page,
     sort: str = "-last_activity_at",
+    project_id: int = None,
+    user_id: int = None,
     extra_filters: dict = None
 ) -> ToolResult:
     """List tasks with optional filters and pagination.
 
     Developer notes:
+    - project_id and user_id are converted to Productive API filters.
     - extra_filters is passed through directly to the API (e.g., filter[status][eq]).
     - Enforces a configurable default page[size] for consistency when not provided.
     - Sort supports Productive's allowed fields (e.g., last_activity_at, created_at, due_date).
@@ -71,6 +74,10 @@ async def get_tasks(
         params["page[size]"] = page_size
         if sort:
             params["sort"] = sort
+        if project_id is not None:
+            params["filter[project_id][eq]"] = project_id
+        if user_id is not None:
+            params["filter[assignee_id][eq]"] = user_id
         if extra_filters:
             params.update(extra_filters)
 

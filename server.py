@@ -22,15 +22,12 @@ async def lifespan(server):
 
 mcp = FastMCP(
     name="Productive MCP Server",
-    instructions = (
-        "Use this tool to access Productive projects, pages (documents), tasks, comments, and todo-lists."
-        "Focus on providing accurate and concise information based on the data available in Productive."
-        "If a project name or ID is provided, focus on that project. If a task ID is provided, focus on that task."
-        "For inexact queries, use quick_search to find relevant entries."
-        "For questions like 'What did the team work on today?', use get_recent_activity."
-        "For complete detail about a specific task, use get_task or get_project_task -> get_comments -> get_todos."
+    instructions=(
+        "Access Productive.io data: projects, tasks, pages, comments, todos."
+        "Use quick_search for general queries, get_recent_activity for team updates, get_project_task/get_task for specific tasks."
+        "All endpoints paginate (max 200 items). Use filters when possible to reduce scope."
     ),
-    version="1.1.0",
+    version="1.2.0",
     lifespan=lifespan,
     on_duplicate_tools="warn",
     on_duplicate_resources="warn",
@@ -39,22 +36,24 @@ mcp = FastMCP(
 
 @mcp.tool
 async def get_projects(ctx: Context) -> Dict[str, Any]:
-    """Get all active projects with budgets, deadlines, and team assignments.
+    """Get all projects with basic information.
 
-    Returns comprehensive project data including:
-    - Project budgets, hourly rates, and cost tracking
-    - Team members with roles and hourly rates
-    - Deadlines, start/end dates, and project status
-    - Client information and contact details
+    Returns project data including:
+    - Project ID, name, and number
+    - Creation and last activity timestamps
+    - Archived status (if applicable)
+    - Webapp URL for direct access
     """
     return await tools.get_projects(ctx)
 
 @mcp.tool
 async def get_tasks(
     ctx: Context,
-    page_number: Annotated[
-        int, Field(description="Page number for pagination")
+    project_id: Annotated[int, Field(description="Filter tasks by project ID")] = None,
+    user_id: Annotated[
+        int, Field(description="Filter tasks by assignee/user ID")
     ] = None,
+    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
     page_size: Annotated[
         int, Field(description="Optional number of tasks per page (max 200)")
     ] = None,
@@ -67,25 +66,25 @@ async def get_tasks(
     extra_filters: Annotated[
         dict,
         Field(
-            description="Additional Productive query filters using API syntax. Common filters: filter[status][eq] (1: open, 2: closed), filter[project_id][eq] (ID), filter[assignee_id][eq] (ID), filter[due_date][gte] (date)."
+            description="Additional Productive query filters using API syntax. Common filters: filter[status][eq] (1: open, 2: closed), filter[due_date][gte] (date)."
         ),
     ] = None,
 ) -> Dict[str, Any]:
     """Get tasks with optional filtering and pagination.
 
-    Supports Productive's native query-language:
-      - Pagination: page_number, page_size
-      - Sorting: sort parameter (defaults to most recent activity first)
-      - All params are optional; omit to fetch all tasks.
+    Supports filtering by project, assignee, status, and other criteria.
+    All parameters are optional - omit to fetch all tasks.
 
     Returns:
-        Dictionary of tasks matching the provided filters (passed through to the Productive API)
+        Dictionary of tasks matching the provided filters
     """
     return await tools.get_tasks(
         ctx,
         page_number=page_number,
         page_size=page_size,
         sort=sort,
+        project_id=project_id,
+        user_id=user_id,
         extra_filters=extra_filters
     )
 
@@ -110,69 +109,69 @@ async def get_task(
     return await tools.get_task(ctx=ctx, task_id=task_id)
 
 
-@mcp.tool
-async def get_project_tasks(
-    ctx: Context,
-    project_id: Annotated[
-        int, Field(description="The project ID to get tasks for")
-    ],
-    status: Annotated[
-        int, Field(description="Optional filter by task status: 1 = open, 2 = closed")
-    ] = None,
-) -> Dict[str, Any]:
-    """Get all tasks for a specific project.
+# @mcp.tool
+# async def get_project_tasks(
+#     ctx: Context,
+#     project_id: Annotated[
+#         int, Field(description="The project ID to get tasks for")
+#     ],
+#     status: Annotated[
+#         int, Field(description="Optional filter by task status: 1 = open, 2 = closed")
+#     ] = None,
+# ) -> Dict[str, Any]:
+#     """Get all tasks for a specific project.
     
-    This is optimized for getting a comprehensive view of all tasks in a project.
+#     This is optimized for getting a comprehensive view of all tasks in a project.
 
-    Returns a list of all tasks in the project with details including:
-    - Task title, number, and status
-    - Assignee information
-    - Due dates and priority
-    - Task descriptions
-    - Related project context
+#     Returns a list of all tasks in the project with details including:
+#     - Task title, number, and status
+#     - Assignee information
+#     - Due dates and priority
+#     - Task descriptions
+#     - Related project context
     
-    Example:
-        To get all open tasks in project 343136:
-        get_project_tasks(project_id=343136, status=1)
-    """
-    return await tools.get_project_tasks(
-        ctx=ctx,
-        project_id=project_id,
-        status=status
-    )
+#     Example:
+#         To get all open tasks in project 343136:
+#         get_project_tasks(project_id=343136, status=1)
+#     """
+#     return await tools.get_project_tasks(
+#         ctx=ctx,
+#         project_id=project_id,
+#         status=status
+#     )
 
 
-@mcp.tool
-async def get_project_task(
-    ctx: Context,
-    task_number: Annotated[
-        str, Field(description="The task number without # (e.g., '960')")
-    ],
-    project_id: Annotated[
-        int, Field(description="The project ID containing the task")
-    ],
-) -> Dict[str, Any]:
-    """Get a task by its number within a specific project.
+# @mcp.tool
+# async def get_project_task(
+#     ctx: Context,
+#     task_number: Annotated[
+#         str, Field(description="The task number without # (e.g., '960')")
+#     ],
+#     project_id: Annotated[
+#         int, Field(description="The project ID containing the task")
+#     ],
+# ) -> Dict[str, Any]:
+#     """Get a task by its number within a specific project.
     
-    This is the preferred way to fetch tasks when you know the task number (e.g., #960)
-    that appears in the UI, rather than the internal database ID.
+#     This is the preferred way to fetch tasks when you know the task number (e.g., #960)
+#     that appears in the UI, rather than the internal database ID.
 
-    Task numbers are project-specific, so you must provide both the task_number and project_id.
-    For example, task #960 in project 343136.
+#     Task numbers are project-specific, so you must provide both the task_number and project_id.
+#     For example, task #960 in project 343136.
 
-    Returns comprehensive task details including:
-    - Task description, priority, and current status
-    - Assigned team member with role and hourly rate
-    - Parent project with budget and client details
-    - Time tracking: estimated vs actual hours
-    - All comments and discussion history
-    - Attached files and checklist items (todos)
-    """
-    return await tools.get_project_task(
-        ctx=ctx,
-        task_number=task_number,
-        project_id=project_id
-    )
+#     Returns comprehensive task details including:
+#     - Task description, priority, and current status
+#     - Assigned team member with role and hourly rate
+#     - Parent project with budget and client details
+#     - Time tracking: estimated vs actual hours
+#     - All comments and discussion history
+#     - Attached files and checklist items (todos)
+#     """
+#     return await tools.get_project_task(
+#         ctx=ctx,
+#         task_number=task_number,
+#         project_id=project_id
+#     )
 
 @mcp.tool
 async def get_comments(

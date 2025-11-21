@@ -41,7 +41,8 @@ def _filter_attributes(attributes: Dict[str, Any], obj_type: str) -> Dict[str, A
             'project_color_id',
             'duplication_status',
             'project_type_id',
-            'preferences'
+            'preferences',
+            'number'  # Redundant with project_number
         ],
     }
     
@@ -75,12 +76,10 @@ def _filter_task_list_attributes(attributes: Dict[str, Any]) -> Dict[str, Any]:
     # Keep only these essential fields
     essential_fields = [
         'title',
-        'number',
         'task_number',
         'closed',
         'created_at',
         'updated_at',
-        'last_activity_at',
         'initial_estimate',
         'remaining_time',
         'worked_time',
