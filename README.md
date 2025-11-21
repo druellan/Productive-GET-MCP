@@ -6,18 +6,16 @@ This implementation is tailored for read-only operations, providing streamlined 
 
 ## Features
 
-- **Get Projects**: Retrieve all projects
+- **Get Projects**: Retrieve all projects with basic information
 - **Get Tasks**: Retrieve tasks with filtering and pagination
 - **Get Task**: Retrieve a specific task by internal ID
-- **Get Project Tasks**: Retrieve all tasks for a specific project (lightweight)
-- **Get Project Task**: Retrieve a task by its number (e.g., #960)
-- **Get Recent Updates**: Summarized activity feed for status updates
 - **Get Comments**: Retrieve comments with filtering
 - **Get Pages**: Retrieve pages/documents with filtering
 - **Get Page**: Retrieve a specific page/document by ID
 - **Get Attachments**: Retrieve attachments/files with filtering
-- **Get Todos**: Retrieve todo items with filtering
+- **Get Todos**: Retrieve todo checklist items with filtering
 - **Get Todo**: Retrieve a specific todo by ID
+- **Get Recent Updates**: Summarized activity feed for status updates
 - **Quick Search**: Fast, comprehensive search across projects, tasks, pages, and actions
 - **LLM-Optimized Responses**: Filtered output removes noise, strips HTML, and reduces token consumption
 
@@ -82,7 +80,7 @@ The server uses environment variables for configuration:
 ## Available Tools
 
 ### `get_projects`
-Retrieve all active projects. Returns paginated results with project details, attributes, and relationships.
+Retrieve all projects with basic information.
 
 **Properties:**
 - No parameters (returns all projects)
@@ -92,10 +90,11 @@ Retrieve tasks with optional filtering and pagination.
 
 **Properties:**
 - `project_id` (int, optional): Filter tasks by Productive project ID
+- `user_id` (int, optional): Filter tasks by assignee/user ID
 - `page_number` (int, optional): Page number for pagination
-- `page_size` (int, optional): Page size for pagination (default: 20)
+- `page_size` (int, optional): Page size for pagination (default: 50)
 - `sort` (str, optional): Sort parameter (e.g., 'last_activity_at', '-last_activity_at', 'created_at', 'due_date')
-- `extra_filters` (dict, optional): Additional Productive API filters (e.g., `{'filter[status][eq]': 'open'}`)
+- `extra_filters` (dict, optional): Additional Productive API filters (e.g., `{'filter[status][eq]': 1}` for open tasks, `{'filter[status][eq]': 2}` for closed tasks)
 
 ### `get_task`
 Retrieve a specific task by its internal ID. Returns task details including title, description, status, dates, time tracking metrics, and todo counts.
@@ -162,7 +161,6 @@ Get a summarized feed of recent activities and updates. Perfect for status updat
 - `event_type` (str, optional): Filter by event type (e.g., 'create', 'copy', 'update', 'delete')
 - `task_id` (int, optional): Filter by specific task ID
 - `max_results` (int, optional): Maximum number of activities to return (default: 100, max: 200)
-
 
 ### `get_todos`
 Retrieve todo checklist items with optional filtering and pagination.
@@ -238,18 +236,9 @@ Example JSON output for projects:
       "type": "projects",
       "attributes": {
         "name": "test project",
-        "number": "1",
-        "project_type_id": 2,
+        "project_number": "1",
         "created_at": "2025-10-12T06:07:57.592+02:00",
         "archived_at": null
-      },
-      "relationships": {
-        "organization": {
-          "data": {
-            "type": "organizations",
-            "id": "3003"
-          }
-        }
       }
     }
   ],
