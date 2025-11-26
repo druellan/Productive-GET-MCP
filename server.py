@@ -54,7 +54,7 @@ mcp = FastMCP(
         "Use quick_search for general queries, get_recent_activity for team updates, get_project_task/get_task for specific tasks."
         "All endpoints paginate (max 200 items). Use filters when possible to reduce scope."
     ),
-    version="1.2.0",
+    version="1.3.0",
     lifespan=lifespan,
     on_duplicate_tools="warn",
     on_duplicate_resources="warn",
