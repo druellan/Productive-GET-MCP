@@ -5,6 +5,32 @@ from config import config
 from productive_client import client
 import tools
 from contextlib import asynccontextmanager
+import json
+from toon import encode as toon_encode
+
+
+def output_serializer(data: Any) -> str:
+    """Serialize tool output based on OUTPUT_FORMAT configuration.
+
+    Args:
+        data: The data to serialize
+
+    Returns:
+        Serialized string in the configured format (TOON or JSON)
+    """
+    if isinstance(data, str):
+        # Don't serialize strings that are already formatted
+        return data
+
+    if config.output_format == "toon":
+        try:
+            return toon_encode(data)
+        except Exception:
+            pass
+
+    # Default to JSON
+    return json.dumps(data, indent=2, ensure_ascii=False)
+
 
 @asynccontextmanager
 async def lifespan(server):
@@ -14,11 +40,12 @@ async def lifespan(server):
         config.validate()
     except ValueError as e:
         raise ValueError(f"Configuration error: {str(e)}")
-    
+
     yield
-    
+
     # Shutdown
     await client.close()
+
 
 mcp = FastMCP(
     name="Productive MCP Server",
@@ -32,7 +59,9 @@ mcp = FastMCP(
     on_duplicate_tools="warn",
     on_duplicate_resources="warn",
     on_duplicate_prompts="warn",
+    tool_serializer=output_serializer,
 )
+
 
 @mcp.tool
 async def get_projects(ctx: Context) -> Dict[str, Any]:
@@ -45,6 +74,7 @@ async def get_projects(ctx: Context) -> Dict[str, Any]:
     - Webapp URL for direct access
     """
     return await tools.get_projects(ctx)
+
 
 @mcp.tool
 async def get_tasks(
@@ -85,8 +115,9 @@ async def get_tasks(
         sort=sort,
         project_id=project_id,
         user_id=user_id,
-        extra_filters=extra_filters
+        extra_filters=extra_filters,
     )
+
 
 @mcp.tool
 async def get_task(
@@ -96,7 +127,7 @@ async def get_task(
     ],
 ) -> Dict[str, Any]:
     """Get detailed task information by its internal ID.
-    
+
     Use this when you have the internal task ID (e.g., 14677418).
     For looking up tasks by their project-specific number (e.g., #960), use get_project_task instead.
 
@@ -120,7 +151,7 @@ async def get_task(
 #     ] = None,
 # ) -> Dict[str, Any]:
 #     """Get all tasks for a specific project.
-    
+
 #     This is optimized for getting a comprehensive view of all tasks in a project.
 
 #     Returns a list of all tasks in the project with details including:
@@ -129,7 +160,7 @@ async def get_task(
 #     - Due dates and priority
 #     - Task descriptions
 #     - Related project context
-    
+
 #     Example:
 #         To get all open tasks in project 343136:
 #         get_project_tasks(project_id=343136, status=1)
@@ -152,7 +183,7 @@ async def get_task(
 #     ],
 # ) -> Dict[str, Any]:
 #     """Get a task by its number within a specific project.
-    
+
 #     This is the preferred way to fetch tasks when you know the task number (e.g., #960)
 #     that appears in the UI, rather than the internal database ID.
 
@@ -172,6 +203,7 @@ async def get_task(
 #         task_number=task_number,
 #         project_id=project_id
 #     )
+
 
 @mcp.tool
 async def get_comments(
@@ -208,8 +240,9 @@ async def get_comments(
         task_id=task_id,
         page_number=page_number,
         page_size=page_size,
-        extra_filters=extra_filters
+        extra_filters=extra_filters,
     )
+
 
 # @mcp.tool
 # async def get_comment(
@@ -229,13 +262,23 @@ async def get_comments(
 #     """
 #     return await tools.get_comment(ctx, comment_id)
 
+
 @mcp.tool
 async def get_todos(
     ctx: Context,
-    task_id: Annotated[int, Field(description="Productive task ID to filter todos by")] = None,
+    task_id: Annotated[
+        int, Field(description="Productive task ID to filter todos by")
+    ] = None,
     page_number: Annotated[int, Field(description="Page number for pagination")] = None,
-    page_size: Annotated[int, Field(description="Optional number of todos per page (max 200)")] = None,
-    extra_filters: Annotated[dict, Field(description="Additional Productive query filters using API syntax. Common filters: filter[task_id][eq] (ID), filter[status][eq] (1: open, 2: closed), filter[assignee_id][eq] (ID).")] = None
+    page_size: Annotated[
+        int, Field(description="Optional number of todos per page (max 200)")
+    ] = None,
+    extra_filters: Annotated[
+        dict,
+        Field(
+            description="Additional Productive query filters using API syntax. Common filters: filter[task_id][eq] (ID), filter[status][eq] (1: open, 2: closed), filter[assignee_id][eq] (ID)."
+        ),
+    ] = None,
 ) -> Dict[str, Any]:
     """Get all todo checklist items across all tasks and projects.
 
@@ -251,8 +294,9 @@ async def get_todos(
         task_id=task_id,
         page_number=page_number,
         page_size=page_size,
-        extra_filters=extra_filters
+        extra_filters=extra_filters,
     )
+
 
 @mcp.tool
 async def get_todo(
@@ -271,11 +315,15 @@ async def get_todo(
     """
     return await tools.get_todo(ctx, todo_id)
 
+
 @mcp.tool
 async def get_recent_activity(
     ctx: Context,
     hours: Annotated[
-        int, Field(description="Number of hours to look back (default: 24, use 168 for a week)")
+        int,
+        Field(
+            description="Number of hours to look back (default: 24, use 168 for a week)"
+        ),
     ] = 24,
     user_id: Annotated[
         int, Field(description="Optional: Filter by specific user/person ID")
@@ -284,19 +332,29 @@ async def get_recent_activity(
         int, Field(description="Optional: Filter by specific project ID")
     ] = None,
     activity_type: Annotated[
-        int, Field(description="Optional: Filter by activity type (1: Comment, 2: Changeset, 3: Email)")
+        int,
+        Field(
+            description="Optional: Filter by activity type (1: Comment, 2: Changeset, 3: Email)"
+        ),
     ] = None,
     item_type: Annotated[
-        str, Field(description="Optional: Filter by item type. Accepted values include: Task, Page, Project, Person, Discussion, TimeEntry, Section, TaskList, Dashboard, Team. Note: This list is not exhaustive; see Productive Activities docs for latest values.")
+        str,
+        Field(
+            description="Optional: Filter by item type. Accepted values include: Task, Page, Project, Person, Discussion, TimeEntry, Section, TaskList, Dashboard, Team. Note: This list is not exhaustive; see Productive Activities docs for latest values."
+        ),
     ] = None,
     event_type: Annotated[
-        str, Field(description="Optional: Filter by event type. Common values include: create, copy, edit, delete; see Productive Activities docs for current list.")
+        str,
+        Field(
+            description="Optional: Filter by event type. Common values include: create, copy, edit, delete; see Productive Activities docs for current list."
+        ),
     ] = None,
     task_id: Annotated[
         int, Field(description="Optional: Filter by specific task ID")
     ] = None,
     max_results: Annotated[
-        int, Field(description="Optional maximum number of activities to return (max: 200)")
+        int,
+        Field(description="Optional maximum number of activities to return (max: 200)"),
     ] = None,
 ) -> Dict[str, Any]:
     """Get a summarized feed of recent activities and updates.
@@ -320,7 +378,7 @@ async def get_recent_activity(
         item_type=item_type,
         event_type=event_type,
         task_id=task_id,
-        max_results=max_results
+        max_results=max_results,
     )
 
 
@@ -339,13 +397,13 @@ async def get_pages(
     ] = None,
 ) -> Dict[str, Any]:
     """Get all pages/documents with optional filtering.
-    
+
     Pages in Productive are documents that can contain rich text content,
     attachments, and are organized within projects.
-        
+
     Returns:
         Dictionary containing pages with content, metadata, and relationships
-        
+
     Example:
         get_pages(project_id=1234)  # Get all pages for a specific project
     """
@@ -354,7 +412,7 @@ async def get_pages(
         project_id=project_id,
         creator_id=creator_id,
         page_number=page_number,
-        page_size=page_size
+        page_size=page_size,
     )
 
 
@@ -364,7 +422,7 @@ async def get_page(
     page_id: Annotated[int, Field(description="The unique Productive page identifier")],
 ) -> Dict[str, Any]:
     """Get specific page/document details with full content.
-        
+
     Returns:
         Dictionary with complete page details including JSON-formatted content
     """
@@ -379,26 +437,21 @@ async def get_attachments(
         int, Field(description="Optional number of attachments per page (max 200)")
     ] = None,
     extra_filters: Annotated[
-        dict,
-        Field(description="Additional Productive query filters using API syntax")
+        dict, Field(description="Additional Productive query filters using API syntax")
     ] = None,
 ) -> Dict[str, Any]:
     """Get all attachments/files with optional filtering.
-    
+
     Attachments are files (PDFs, images, documents) that can be associated with
     various Productive entities like tasks, comments, expenses, etc.
-        
+
     Returns:
         Dictionary containing attachment metadata (name, type, size, relationships)
         Note: This provides metadata only, not actual file content
     """
     return await tools.get_attachments(
-        ctx,
-        page_number=page_number,
-        page_size=page_size,
-        extra_filters=extra_filters
+        ctx, page_number=page_number, page_size=page_size, extra_filters=extra_filters
     )
-
 
 
 @mcp.tool
@@ -407,26 +460,28 @@ async def quick_search(
     query: Annotated[str, Field(description="Search query string")],
     search_types: Annotated[
         list[str],
-        Field(description="List of types to search (action, project, task, page). Defaults to all.")
+        Field(
+            description="List of types to search (action, project, task, page). Defaults to all."
+        ),
     ] = None,
     deep_search: Annotated[
         bool, Field(description="Whether to perform deep search")
     ] = True,
     page: Annotated[int, Field(description="Page number for pagination")] = 1,
-    per_page: Annotated[int, Field(description="Results per page")] = 50
+    per_page: Annotated[int, Field(description="Results per page")] = 50,
 ) -> Dict[str, Any]:
     """Quick search across projects, tasks, pages, and actions.
-    
+
     This tool provides fast, comprehensive search across all Productive content types
     including projects, tasks, pages, and actions. It's optimized for quick lookups
     and general search queries.
-    
+
     Returns:
         Search results from Productive API including:
         - Matching projects, tasks, pages, and actions
         - Relevance scores and metadata
         - Full entity details for each match
-    
+
     Examples:
         quick_search("ded")  # Search for "ded" across all content types
         quick_search("project", search_types=["project"])  # Search only in projects
@@ -438,30 +493,8 @@ async def quick_search(
         search_types=search_types,
         deep_search=deep_search,
         page=page,
-        per_page=per_page
+        per_page=per_page,
     )
-
-
-
-
-
-# @mcp.tool
-# async def get_attachment(
-#     attachment_id: Annotated[int, Field(description="The unique Productive attachment identifier")],
-#     ctx: Context,
-# ) -> Dict[str, Any]:
-#     """Get specific attachment/file details.
-        
-#     Returns:
-#         Dictionary with complete attachment metadata including:
-#         - File name, type, size
-#         - Associated entity (task, comment, etc.)
-#         - Upload metadata
-        
-#     Note:
-#         This provides metadata only, not actual file content
-#     """
-#     return await tools.get_attachment(attachment_id, ctx)
 
 
 if __name__ == "__main__":
