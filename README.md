@@ -2,7 +2,7 @@
 
 A Model Context Protocol (MCP) server for accessing Productive.io API endpoints (projects, tasks, comments, todos, pages, attachments) via GET operations. Built with [FastMCP](https://gofastmcp.com/).
 
-This implementation is tailored for read-only operations, providing streamlined access to essential data while minimizing token consumption. It is optimized for efficiency and simplicity, exposing only the necessary information. For a more comprehensive solution, consider BerwickGeek's implementation: [Productive MCP by BerwickGeek](https://github.com/berwickgeek/productive-mcp).
+This implementation is tailored for read-only operations, providing streamlined access to essential data while minimizing token consumption using TOON as output. It is optimized for efficiency and simplicity, exposing only the necessary information. For a more comprehensive solution, consider BerwickGeek's implementation: [Productive MCP by BerwickGeek](https://github.com/berwickgeek/productive-mcp).
 
 ## Features
 
@@ -214,8 +214,8 @@ Retrieve a specific todo checklist item by ID.
 
 All tools return filtered data optimized for LLM processing. The output format can be configured via the `OUTPUT_FORMAT` environment variable:
 
-- **TOON** (default): Token-Optimized Object Notation reduces token consumption by 30-60% compared to JSON, ideal for LLM interactions
 - **JSON**: Standard JSON format for compatibility with existing tools and workflows
+- **TOON** (default): Token-Optimized Object Notation reduces token consumption by 30-60% compared to JSON, ideal for LLM interactions
 
 All tools return filtered data optimized for LLM processing:
 
