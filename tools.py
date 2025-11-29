@@ -101,6 +101,7 @@ async def get_task(ctx: Context, task_id: int) -> ToolResult:
     Developer notes:
     - Wraps client.get_task(task_id).
     - Applies utils.filter_response to sanitize output.
+    - Ensures time tracking fields are always present (initial_estimate, worked_time, billable_time, remaining_time).
     - Raises ProductiveAPIError on failure.
     """
     try:
@@ -109,6 +110,22 @@ async def get_task(ctx: Context, task_id: int) -> ToolResult:
         await ctx.info("Successfully retrieved task")
         
         filtered = filter_response(result)
+        
+        # Ensure time tracking fields are always present at the top level
+        if "data" in filtered and "attributes" in filtered["data"]:
+            attributes = filtered["data"]["attributes"]
+            
+            # Set default values for time tracking fields if missing
+            time_fields = {
+                "initial_estimate": 0,
+                "worked_time": 0,
+                "billable_time": 0,
+                "remaining_time": 0
+            }
+            
+            for field, default_value in time_fields.items():
+                if field not in attributes or attributes[field] is None:
+                    attributes[field] = default_value
         
         return filtered
         
@@ -446,6 +463,119 @@ def _get_applied_filters(params: dict) -> dict:
         applied_filters[filter_name] = value
     
     return applied_filters
+
+
+async def get_task_history(
+    ctx: Context,
+    task_id: int,
+    hours: int = 720  # Default to 30 days for comprehensive history
+) -> ToolResult:
+    """Get comprehensive history for a specific task.
+
+    Developer notes:
+    - Aggregates historical data from activities and task events
+    - Returns status history, assignment history, milestones, and activity summary
+    - Ignores unavailable data gracefully (empty arrays/null values)
+    - Uses get_recent_activity with task_id filter for historical data
+    - Now extracts status transitions from changeset (workflow_status_id)
+    """
+    try:
+        # Get the task details first to verify it exists
+        await ctx.info(f"Fetching history for task {task_id}")
+        task_result = await get_task(ctx, task_id)
+
+        if not task_result.get("data"):
+            await ctx.error(f"Task {task_id} not found")
+            return {
+                "task_id": task_id,
+                "error": "Task not found",
+                "status_history": [],
+                "assignment_history": [],
+                "milestones": [],
+                "activity_summary": {}
+            }
+
+        # Get recent activities for this task (comprehensive history)
+        activity_result = await get_recent_activity(
+            ctx,
+            hours=hours,
+            task_id=task_id,
+            max_results=200  # Maximum allowed by API
+        )
+
+        activities = activity_result.get("data", [])
+
+        # Parse activities to extract status changes, assignments, milestones
+        status_history = []
+        assignment_history = []
+        milestones = []
+
+        for activity in activities:
+            attributes = activity.get("attributes", {})
+            event_type = attributes.get("event")
+            item_type = attributes.get("item_type")
+            created_at = attributes.get("created_at")
+            person_name = attributes.get("person_name", "Unknown")
+
+            # Status changes (workflow_status_id in changeset)
+            changeset = attributes.get("changeset", [])
+            if item_type and item_type.lower() == "task" and event_type in ["update", "edit"]:
+                for change in changeset:
+                    if "workflow_status_id" in change:
+                        status_from = change["workflow_status_id"][0]["value"] if len(change["workflow_status_id"]) > 0 else None
+                        status_to = change["workflow_status_id"][1]["value"] if len(change["workflow_status_id"]) > 1 else None
+                        status_history.append({
+                            "from": status_from,
+                            "to": status_to,
+                            "changed_at": created_at
+                        })
+
+            # Assignment changes (parse assignee in changeset)
+            if item_type and item_type.lower() == "task" and event_type in ["update", "edit"]:
+                for change in changeset:
+                    if "assignee" in change:
+                        # The changeset shows the new assignee only
+                        assignee_to = change["assignee"][0]["value"] if len(change["assignee"]) > 0 else None
+                        assignment_history.append({
+                            "assigned_to": assignee_to,
+                            "changed_at": created_at
+                        })
+
+            # Milestones (comments with milestone keywords or custom fields)
+            if item_type and item_type.lower() == "comment" and "milestone" in attributes.get("item_name", "").lower():
+                milestones.append({
+                    "milestone": attributes.get("item_name", "Milestone"),
+                    "completed_at": created_at,
+                    "completed_by": person_name
+                })
+
+        # Build activity summary
+        activity_summary = {
+            "total_activities": len(activities),
+            "total_comments": len([a for a in activities if a.get("attributes", {}).get("item_type") == "Comment"]),
+            "total_changes": len([a for a in activities if a.get("attributes", {}).get("item_type") == "Task"]),
+            "total_status_changes": len(status_history),
+            "total_assignments": len(assignment_history),
+            "total_milestones": len(milestones)
+        }
+
+        # Build final history response
+        history_response = {
+            "task_id": task_id,
+            "status_history": status_history,
+            "assignment_history": assignment_history,
+            "milestones": milestones,
+            "activity_summary": activity_summary
+        }
+
+        await ctx.info(f"Successfully retrieved history for task {task_id}")
+        return history_response
+
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, f"task history for {task_id}")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching task history: {str(e)}")
+        raise e
 
 
 def _summarize_activities(activities: list) -> dict:

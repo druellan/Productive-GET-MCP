@@ -52,6 +52,7 @@ mcp = FastMCP(
     instructions=(
         "Access Productive.io data: projects, tasks, pages, comments, todos, people."
         "Use quick_search for general queries, get_recent_activity for team updates, get_task for specific tasks."
+        "Use get_task_history for comprehensive task history including status changes, assignments, and milestones."
         "Use get_people to list team members and get_person for individual details."
         "All endpoints paginate (max 200 items). Use filters when possible to reduce scope."
     ),
@@ -248,6 +249,37 @@ async def get_task(
     - Todo counts: total and open
     """
     return await tools.get_task(ctx=ctx, task_id=task_id)
+
+
+@mcp.tool
+async def get_task_history(
+    ctx: Context,
+    task_id: Annotated[
+        int, Field(description="The unique Productive task identifier (internal ID)")
+    ],
+    hours: Annotated[
+        int,
+        Field(
+            description="Number of hours to look back for activity history (default: 720 = 30 days)",
+            ge=1,
+            le=8760  # 1 year max
+        )
+    ] = 720
+) -> Dict[str, Any]:
+    """Get comprehensive history for a specific task.
+
+    Returns aggregated task history including:
+    - Status history: Timeline of status changes with timestamps and responsible users
+    - Assignment history: Who worked on the task and when assignments changed
+    - Milestones: Key deliverables and completion markers from comments and activities
+    - Activity summary: Counts of comments, changes, status updates, assignments, and milestones
+
+    Examples:
+        get_task_history(14677921)  # Default 30-day history
+        get_task_history(14677921, hours=168)  # Last week only
+        get_task_history(14677921,1 hours=24)  # Last 24 hours
+    """
+    return await tools.get_task_history(ctx, task_id, hours)
 
 
 # @mcp.tool

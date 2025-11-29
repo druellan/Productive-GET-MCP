@@ -11,7 +11,7 @@ class Config:
         self.timeout = int(os.getenv("PRODUCTIVE_TIMEOUT", "30"))
         self.organization = int(os.getenv("PRODUCTIVE_ORGANIZATION", ""))
         self.items_per_page = int(os.getenv("PRODUCTIVE_ITEMS_PER_PAGE", "50"))
-        self.output_format = os.getenv("OUTPUT_FORMAT", "toon")
+        self.output_format = os.getenv("OUTPUT_FORMAT", "json")
 
     def validate(self) -> bool:
         """Validate configuration

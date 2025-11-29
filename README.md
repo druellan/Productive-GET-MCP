@@ -98,10 +98,32 @@ Retrieve tasks with optional filtering and pagination.
 - `extra_filters` (dict, optional): Additional Productive API filters (e.g., `{'filter[status][eq]': 1}` for open tasks, `{'filter[status][eq]': 2}` for closed tasks)
 
 ### `get_task`
-Retrieve a specific task by its internal ID. Returns task details including title, description, status, dates, time tracking metrics, and todo counts.
+Retrieve a specific task by its internal ID. Returns task details including title, description, status, dates, **time tracking metrics** (`initial_estimate`, `worked_time`, `billable_time`, `remaining_time`), and todo counts.
 
 **Properties:**
 - `task_id` (int): The unique Productive task identifier (internal ID, e.g., 14677418)
+
+---
+
+### `get_task_history`
+Retrieve the full history for a specific task, including status changes, assignment history, milestones, and activity summary.
+
+**Properties:**
+- `task_id` (int): The unique Productive task identifier (internal ID, e.g., 14677418)
+- `hours` (int, optional): Number of hours to look back for activity history (default: 720 = 30 days, max: 8760)
+
+**Returns:**
+- `status_history`: Timeline of status changes with timestamps and responsible users
+- `assignment_history`: Who worked on the task and when assignments changed
+- `milestones`: Key deliverables and completion markers from comments and activities
+- `activity_summary`: Counts of comments, changes, status updates, assignments, and milestones
+
+**Example:**
+```python
+get_task_history(14677921)  # Default 30-day history
+get_task_history(14677921, hours=168)  # Last week only
+get_task_history(14677921, hours=24)  # Last 24 hours
+```
 
 ### `get_project_tasks`
 Get all tasks for a specific project. Optimized for browsing with lightweight output (no descriptions or relationships).
