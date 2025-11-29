@@ -11,6 +11,7 @@ class Config:
         self.timeout = int(os.getenv("PRODUCTIVE_TIMEOUT", "30"))
         self.organization = int(os.getenv("PRODUCTIVE_ORGANIZATION", ""))
         self.items_per_page = int(os.getenv("PRODUCTIVE_ITEMS_PER_PAGE", "50"))
+        self.output_format = os.getenv("OUTPUT_FORMAT", "toon")
 
     def validate(self) -> bool:
         """Validate configuration
@@ -39,7 +40,10 @@ class Config:
             
         if self.items_per_page <= 0 or self.items_per_page > 200:
             errors.append("PRODUCTIVE_ITEMS_PER_PAGE must be between 1 and 200")
-            
+
+        if self.output_format not in ["toon", "json"]:
+            errors.append("OUTPUT_FORMAT must be either 'toon' or 'json'")
+
         if errors:
             raise ValueError("Configuration validation failed: " + "; ".join(errors))
             

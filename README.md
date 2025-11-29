@@ -2,7 +2,7 @@
 
 A Model Context Protocol (MCP) server for accessing Productive.io API endpoints (projects, tasks, comments, todos, pages, attachments) via GET operations. Built with [FastMCP](https://gofastmcp.com/).
 
-This implementation is tailored for read-only operations, providing streamlined access to essential data while minimizing token consumption. It is optimized for efficiency and simplicity, exposing only the necessary information. For a more comprehensive solution, consider BerwickGeek's implementation: [Productive MCP by BerwickGeek](https://github.com/berwickgeek/productive-mcp).
+This implementation is tailored for read-only operations, providing streamlined access to essential data while minimizing token consumption using TOON as output. It is optimized for efficiency and simplicity, exposing only the necessary information. For a more comprehensive solution, consider BerwickGeek's implementation: [Productive MCP by BerwickGeek](https://github.com/berwickgeek/productive-mcp).
 
 ## Features
 
@@ -45,6 +45,7 @@ The server uses environment variables for configuration:
 - `PRODUCTIVE_ORGANIZATION`: Your Productive organization ID (required)
 - `PRODUCTIVE_BASE_URL`: Base URL for Productive API (default: https://api.productive.io/api/v2)
 - `PRODUCTIVE_TIMEOUT`: Request timeout in seconds (default: 30)
+- `OUTPUT_FORMAT`: Output format for tool responses ("toon" or "json", default: "toon")
 
 ## Usage
 
@@ -211,7 +212,12 @@ Retrieve a specific todo checklist item by ID.
 
 ## Output Format
 
-All tools return filtered JSON optimized for LLM processing:
+All tools return filtered data optimized for LLM processing. The output format can be configured via the `OUTPUT_FORMAT` environment variable:
+
+- **JSON**: Standard JSON format for compatibility with existing tools and workflows
+- **TOON** (default): Token-Optimized Object Notation reduces token consumption by 30-60% compared to JSON, ideal for LLM interactions
+
+All tools return filtered data optimized for LLM processing:
 
 **LLM Optimizations:**
 - Unwanted fields removed (e.g., `creation_method_id`, `email_key`, `placement` from tasks)
@@ -227,30 +233,6 @@ All tools return filtered JSON optimized for LLM processing:
 - `included`: Related resource data (when applicable)
 - `webapp_url`: Direct link to view the resource in Productive (e.g., `https://app.productive.io/12345/tasks/67890`)
 
-Example JSON output for projects:
-```json
-{
-  "data": [
-    {
-      "id": "628",
-      "type": "projects",
-      "attributes": {
-        "name": "test project",
-        "project_number": "1",
-        "created_at": "2025-10-12T06:07:57.592+02:00",
-        "archived_at": null
-      }
-    }
-  ],
-  "meta": {
-    "current_page": 1,
-    "total_pages": 1,
-    "total_count": 3,
-    "page_size": 30,
-    "max_page_size": 200
-  }
-}
-```
 
 ## Error Handling
 
