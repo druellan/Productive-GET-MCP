@@ -113,8 +113,8 @@ Retrieve the full history for a specific task, including status changes, assignm
 - `hours` (int, optional): Number of hours to look back for activity history (default: 720 = 30 days, max: 8760)
 
 **Returns:**
-- `status_history`: Timeline of status changes with timestamps and responsible users
-- `assignment_history`: Who worked on the task and when assignments changed
+- `status_history`: Timeline of status changes with timestamps (from/to status and changed_at)
+- `assignment_history`: Assignment changes showing who was assigned and when (assigned_to and changed_at)
 - `milestones`: Key deliverables and completion markers from comments and activities
 - `activity_summary`: Counts of comments, changes, status updates, assignments, and milestones
 
@@ -125,19 +125,6 @@ get_task_history(14677921, hours=168)  # Last week only
 get_task_history(14677921, hours=24)  # Last 24 hours
 ```
 
-### `get_project_tasks`
-Get all tasks for a specific project. Optimized for browsing with lightweight output (no descriptions or relationships).
-
-**Properties:**
-- `project_id` (int): The project ID to get tasks for
-- `status` (str, optional): Filter by task status ('open' or 'closed')
-
-### `get_project_task`
-Get a task by its  number within a project (e.g., task #960). Returns full task details.
-
-**Properties:**
-- `task_number` (str): The task number (e.g., "960")
-- `project_id` (int): The project ID containing the task
 
 ### `get_comments`
 Retrieve comments with optional filtering and pagination.
