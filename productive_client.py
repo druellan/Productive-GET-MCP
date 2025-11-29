@@ -127,11 +127,19 @@ class ProductiveClient:
         """Get attachment by ID"""
         return await self._request("GET", f"/attachments/{str(attachment_id)}")
 
+    async def get_people(self, params: Optional[dict] = None) -> Dict[str, Any]:
+        """Get all people/team members"""
+        return await self._request("GET", "/people", params=params)
+
+    async def get_person(self, person_id: int) -> Dict[str, Any]:
+        """Get person by ID"""
+        return await self._request("GET", f"/people/{str(person_id)}")
+
     async def quick_search(self, query: str, search_types: Optional[list] = None, deep_search: bool = True, page: int = 1, per_page: int = 50) -> Dict[str, Any]:
         """Quick search across projects, tasks, pages, and actions"""
         if search_types is None:
             search_types = ["action", "project", "task", "page"]
-        
+
         params = {
             "filter[query]": query,
             "filter[type]": ",".join(search_types),
@@ -140,7 +148,7 @@ class ProductiveClient:
             "page": page,
             "per_page": per_page
         }
-        
+
         return await self._request("GET", "/search/quick", params=params)
 
     async def close(self):

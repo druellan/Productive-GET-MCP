@@ -587,15 +587,70 @@ async def get_attachment(ctx: Context, attachment_id: int) -> ToolResult:
         await ctx.info(f"Fetching attachment with ID: {attachment_id}")
         result = await client.get_attachment(attachment_id)
         await ctx.info("Successfully retrieved attachment")
-        
+
         filtered = filter_response(result)
-        
+
         return filtered
-        
+
     except ProductiveAPIError as e:
         await _handle_productive_api_error(ctx, e, f"attachment {attachment_id}")
     except Exception as e:
         await ctx.error(f"Unexpected error fetching attachment: {str(e)}")
+
+
+async def get_people(ctx: Context, page_number: int = None, page_size: int = config.items_per_page) -> ToolResult:
+    """List all team members/people with optional pagination.
+
+    Developer notes:
+    - Supports pagination with configurable default page[size].
+    - Sorts by most recent activity first.
+    - Applies utils.filter_response to sanitize output.
+    - Returns basic info for all team members (name, email, role, etc.).
+    """
+    try:
+        await ctx.info("Fetching all people")
+        params = {}
+        if page_number is not None:
+            params["page[number]"] = page_number
+        params["page[size]"] = page_size
+        params["sort"] = "-last_seen_at"
+
+        result = await client.get_people(params=params if params else None)
+        await ctx.info("Successfully retrieved people")
+
+        filtered = filter_response(result)
+
+        return filtered
+
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, "people")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching people: {str(e)}")
+        raise e
+
+
+async def get_person(ctx: Context, person_id: int) -> ToolResult:
+    """Fetch a single person/team member by ID.
+
+    Developer notes:
+    - Wraps client.get_person(person_id).
+    - Applies utils.filter_response to sanitize output.
+    - Returns detailed information about a specific team member.
+    """
+    try:
+        await ctx.info(f"Fetching person with ID: {person_id}")
+        result = await client.get_person(person_id)
+        await ctx.info("Successfully retrieved person")
+
+        filtered = filter_response(result)
+
+        return filtered
+
+    except ProductiveAPIError as e:
+        await _handle_productive_api_error(ctx, e, f"person {person_id}")
+    except Exception as e:
+        await ctx.error(f"Unexpected error fetching person: {str(e)}")
+        raise e
 
 
 async def quick_search(

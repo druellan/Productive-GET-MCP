@@ -50,8 +50,9 @@ async def lifespan(server):
 mcp = FastMCP(
     name="Productive MCP Server",
     instructions=(
-        "Access Productive.io data: projects, tasks, pages, comments, todos."
-        "Use quick_search for general queries, get_recent_activity for team updates, get_project_task/get_task for specific tasks."
+        "Access Productive.io data: projects, tasks, pages, comments, todos, people."
+        "Use quick_search for general queries, get_recent_activity for team updates, get_task for specific tasks."
+        "Use get_people to list team members and get_person for individual details."
         "All endpoints paginate (max 200 items). Use filters when possible to reduce scope."
     ),
     version="1.3.0",
@@ -470,6 +471,46 @@ async def get_page(
         Dictionary with complete page details including JSON-formatted content
     """
     return await tools.get_page(ctx, page_id)
+
+
+@mcp.tool
+async def get_people(
+    ctx: Context,
+    page_number: Annotated[int, Field(description="Page number for pagination")] = None,
+    page_size: Annotated[
+        int, Field(description="Optional number of people per page (max 200)")
+    ] = None,
+) -> Dict[str, Any]:
+    """Get all team members/people with optional pagination.
+
+    Returns team member data including:
+    - Person ID, name, and email
+    - Role and title information
+    - Last seen and join dates
+    - Avatar and contact information
+    """
+    return await tools.get_people(
+        ctx,
+        page_number=page_number,
+        page_size=page_size,
+    )
+
+
+@mcp.tool
+async def get_person(
+    ctx: Context,
+    person_id: Annotated[int, Field(description="The unique Productive person identifier")],
+) -> Dict[str, Any]:
+    """Get detailed information about a specific team member/person.
+
+    Returns comprehensive person details including:
+    - Full name, email, and contact information
+    - Role, title, and organizational details
+    - Activity timestamps (joined, last seen)
+    - Custom fields and additional metadata
+    - Avatar and profile information
+    """
+    return await tools.get_person(ctx, person_id)
 
 
 @mcp.tool
