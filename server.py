@@ -132,13 +132,13 @@ async def get_recent_activity(
     item_type: Annotated[
         str,
         Field(
-            description="Optional: Filter by item type. Accepted values include: Task, Page, Project, Person, Discussion, TimeEntry, Section, TaskList, Dashboard, Team. Note: This list is not exhaustive; see Productive Activities docs for latest values."
+            description="Optional: Filter by item type. Accepted values include: Task, Page, Project, Person, Discussion, TimeEntry, Section, TaskList, Dashboard, Team. Note: This list is not exhaustive."
         ),
     ] = None,
     event_type: Annotated[
         str,
         Field(
-            description="Optional: Filter by event type. Common values include: create, copy, edit, delete; see Productive Activities docs for current list."
+            description="Optional: Filter by event type. Common values include: create, copy, edit, delete. Note: Use get_tasks with filter[status][eq]=2 to find closed tasks."
         ),
     ] = None,
     task_id: Annotated[
@@ -160,6 +160,8 @@ async def get_recent_activity(
         get_recent_activity(hours=24, user_id=12345)  # What a specific user did today
         get_recent_activity(hours=24, activity_type=1)  # Only comments from last day
         get_recent_activity(hours=168, item_type='Task')  # Task activities from last week
+        get_recent_activity(hours=168, event_type='edit')  # Task edits from last week
+        get_tasks(extra_filters={'filter[status][eq]': 2}, sort='-updated_at', page_size=10)  # Recently closed tasks
     """
     return await tools.get_recent_activity(
         ctx,
@@ -207,7 +209,7 @@ async def get_tasks(
     extra_filters: Annotated[
         dict,
         Field(
-            description="Additional Productive query filters using API syntax. Common filters: filter[status][eq] (1: open, 2: closed), filter[due_date][gte] (date)."
+            description="Additional Productive query filters using API syntax. Common filters: filter[status][eq] (1: open, 2: closed), filter[due_date][gte] (date), filter[workflow_status_category_id][eq] (1: not started, 2: started, 3: closed)."
         ),
     ] = None,
 ) -> Dict[str, Any]:
@@ -215,6 +217,12 @@ async def get_tasks(
 
     Supports filtering by project, assignee, status, and other criteria.
     All parameters are optional - omit to fetch all tasks.
+
+    Example of extra_filters:
+    - filter[status][eq]=1: Open tasks
+    - filter[status][eq]=2: Closed tasks
+    - filter[workflow_status_category_id][eq]=3: Workflow closed status
+    - filter[board_status][eq]=1: Active board tasks
 
     Returns:
         Dictionary of tasks matching the provided filters
