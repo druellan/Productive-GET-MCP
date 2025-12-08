@@ -57,7 +57,8 @@ async def get_tasks(
     user_id: int = None,
     extra_filters: dict = None
 ) -> ToolResult:
-    """List tasks with optional filters and pagination.
+    """
+    List tasks with optional filters and pagination.
 
     Developer notes:
     - project_id and user_id are converted to Productive API filters.
@@ -85,7 +86,6 @@ async def get_tasks(
         await ctx.info("Successfully retrieved tasks")
 
         filtered = filter_task_list_response(result)
-
         return filtered
 
     except ProductiveAPIError as e:

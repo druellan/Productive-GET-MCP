@@ -1,6 +1,6 @@
 # Productive.io MCP Server
 
-A Model Context Protocol (MCP) server for accessing Productive.io API endpoints (projects, tasks, comments, todos, pages, attachments) via GET operations. Built with [FastMCP](https://gofastmcp.com/).
+A Model Context Protocol (MCP) server for integrating Productive.io into AI workflows. This server allows AI assistants and tools to access projects, tasks, pages and teams. Built with [FastMCP](https://gofastmcp.com/).
 
 This implementation is tailored for read-only operations, providing streamlined access to essential data while minimizing token consumption using TOON as output. It is optimized for efficiency and simplicity, exposing only the necessary information. For a more comprehensive solution, consider BerwickGeek's implementation: [Productive MCP by BerwickGeek](https://github.com/berwickgeek/productive-mcp).
 
